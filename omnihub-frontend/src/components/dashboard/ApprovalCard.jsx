@@ -45,7 +45,7 @@ export default function ApprovalCard({
             <Link
               className="approval-name-link"
               title="Open conversation in dashboard"
-              to={`/dashboard/${approval.conversation_id}`}
+              to={`/dashboard/${approval.conversation_id?._id || approval.conversation_id || approval.conversation?.id || ''}`}
             >
               <strong>{approval.lead?.full_name || approval.conversation?.sender_name || 'Unknown customer'}</strong>
               <ExternalLink size={12} />
@@ -105,10 +105,10 @@ export default function ApprovalCard({
             <Pencil size={15} /> Edit Draft
           </button>
           <div className="approval-actions-right">
-            <button className="secondary-button approval-btn approval-btn--danger" disabled={busy} onClick={() => onReject(approval.id)} type="button">
+            <button className="secondary-button approval-btn approval-btn--danger" disabled={busy} onClick={() => onReject(approval.id || approval._id)} type="button">
               <X size={15} /> Reject
             </button>
-            <button className="primary-button approval-btn" disabled={busy} onClick={() => onApprove(approval.id)} type="button">
+            <button className="primary-button approval-btn" disabled={busy} onClick={() => onApprove(approval.id || approval._id)} type="button">
               <Check size={15} /> {busy ? 'Sending…' : 'Approve & Send'}
             </button>
           </div>

@@ -206,17 +206,18 @@ export const normalizer = {
    * Normalizes incoming Website Live Chat Widget message.
    */
   normalizeWebsite(body) {
+    const buttonPayload = body.button_payload || body.button_id || (typeof body.button === 'string' ? body.button : body.button?.id) || '';
     return {
       platform: PLATFORMS.WEBCHAT,
       external_chat_id: String(body.chat_id || body.session_id || body.user_id),
       sender_name: body.sender_name || 'Website Visitor',
       sender_phone: body.sender_phone || '',
       sender_email: body.sender_email || '',
-      message_type: body.button_payload ? MESSAGE_TYPES.BUTTON_CLICK : MESSAGE_TYPES.TEXT,
-      text_content: body.text || body.message || '',
+      message_type: buttonPayload ? MESSAGE_TYPES.BUTTON_CLICK : MESSAGE_TYPES.TEXT,
+      text_content: body.text || body.message || body.button?.label || buttonPayload || '',
       media_url: body.media_url || '',
       media_type: body.media_type || '',
-      button_payload: body.button_payload || '',
+      button_payload: buttonPayload,
       timestamp: new Date(),
       raw_payload: body,
     };

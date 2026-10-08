@@ -1,7 +1,7 @@
 import { Conversation, Message, DailyAnalytics, HourlyAnalytics } from '../models/index.js';
 import { emitEvent } from '../sockets/index.js';
 import logger from '../utils/logger.js';
-import { MESSAGE_DIRECTIONS, MESSAGE_STATUS } from '../utils/constants.js';
+import { MESSAGE_DIRECTIONS, MESSAGE_STATUS, MESSAGE_TYPES } from '../utils/constants.js';
 
 export const conversationService = {
   /**
@@ -95,7 +95,42 @@ export const conversationService = {
         logger.warn(`[AI Ingestion Insight Error] ${err.message}`);
       });
 
-      // 6. Trigger Auto-Pilot Bot Evaluation
+      // Trigger Automated Leads CRM Extraction & Auto-Tagging
+      try {
+        const { leadExtractor } = await import('./leadExtractor.js');
+        leadExtractor.extractAndSyncLead(conversation, normalized.text_content).catch((err) => {
+          logger.warn(`[Lead Ingestion Sync Error] ${err.message}`);
+        });
+      } catch (leadErr) {
+        logger.warn(`[Lead Extractor Load Error] ${leadErr.message}`);
+      }
+
+      // 6. Handle Interactive Menu Button Clicks or Greeting Trigger
+      const { menuService } = await import('./menuService.js');
+      const isButtonClick = normalized.message_type === MESSAGE_TYPES.BUTTON_CLICK || Boolean(normalized.button_payload);
+
+      if (isButtonClick) {
+        logger.info(`[Ingestion] Detected button click event: "${normalized.button_payload || normalized.text_content}" on ${normalized.platform}`);
+        const menuResult = await menuService.handleButtonClick({
+          buttonId: normalized.button_payload || normalized.text_content,
+          payload: normalized.button_payload,
+          conversation,
+        });
+        logger.info(`[Ingestion] Processed button click from ${normalized.sender_name} on ${normalized.platform}`);
+        return { conversation, message, menuInteraction: menuResult };
+      }
+
+      // Check if user sent greeting or menu trigger ("Hi", "Hello", "Menu")
+      if (menuService.isMenuTrigger(normalized.text_content) && conversation.auto_pilot !== 'OFF') {
+        logger.info(`[Ingestion] Greeting/Menu trigger detected ("${normalized.text_content}"). Sending interactive menu...`);
+        const menuResult = await menuService.sendInteractiveMenu({
+          conversationId: conversation._id,
+          platform: conversation.platform,
+        });
+        return { conversation, message, autoPilot: { handled: true, action: 'SENT_MENU', menu: menuResult } };
+      }
+
+      // 7. Trigger Auto-Pilot Bot Evaluation
       let autoPilotResult = null;
       try {
         const { autoPilotService } = await import('./autoPilotService.js');

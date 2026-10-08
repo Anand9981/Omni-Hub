@@ -39,13 +39,31 @@ export const approvalController = {
     }
   },
 
+  async getResolvedApprovals(req, res, next) {
+    try {
+      const limit = Number(req.query.limit) || 10;
+      const approvals = await approvalService.listResolved(limit);
+      return res.status(HTTP_STATUS.OK).json(
+        formatResponse(true, approvals, 'Resolved approvals retrieved.'),
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async editAndApproveDraft(req, res, next) {
     try {
       const { id } = req.params;
-      const { text } = req.body;
+      const { text, sendImmediately } = req.body;
       if (!text || !text.trim()) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(
           formatResponse(false, null, 'Edited text cannot be empty.'),
+        );
+      }
+      if (sendImmediately === false) {
+        const result = await approvalService.editDraft(id, text);
+        return res.status(HTTP_STATUS.OK).json(
+          formatResponse(true, result, 'Draft updated in queue.'),
         );
       }
       const result = await approvalService.editAndApproveDraft(id, text, req.user._id);

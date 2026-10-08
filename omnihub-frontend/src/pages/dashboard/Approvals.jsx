@@ -45,17 +45,17 @@ export default function Approvals() {
   }
 
   function handleApprove(approvalId) {
-    const target = pending.find((item) => item.id === approvalId);
+    const target = pending.find((item) => (item.id || item._id) === approvalId);
     dispatch(approveDraft({ approvalId })).then(() => refreshAfter(target?.conversation_id));
   }
 
   function handleReject(approvalId) {
-    const target = pending.find((item) => item.id === approvalId);
+    const target = pending.find((item) => (item.id || item._id) === approvalId);
     dispatch(rejectDraft({ approvalId })).then(() => refreshAfter(target?.conversation_id));
   }
 
   function handleSaveEdit(approvalId, text) {
-    const target = pending.find((item) => item.id === approvalId);
+    const target = pending.find((item) => (item.id || item._id) === approvalId);
     dispatch(approveDraft({ approvalId, text })).then(() => refreshAfter(target?.conversation_id));
   }
 

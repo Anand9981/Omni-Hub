@@ -1,5 +1,6 @@
 import { demoStore } from './conversationService.js';
 import { LEAD_STATUS } from '../utils/constants.js';
+import api from '../api/axios.js';
 
 export const LEAD_STATUSES = Object.values(LEAD_STATUS);
 
@@ -10,7 +11,27 @@ function lastMessageFor(messages, conversationId) {
 }
 
 export const leadService = {
-  listLeads() {
+  async listLeads() {
+    try {
+      const res = await api.get('/dashboard/leads');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        return res.data.data.map((lead) => ({
+          ...lead,
+          id: lead._id || lead.id,
+          conversation_id: lead.conversation_id?._id || lead.conversation_id?.id || lead.conversation_id,
+          full_name: lead.full_name || lead.conversation_id?.sender_name || 'Prospect',
+          phone_number: lead.phone_number || lead.conversation_id?.sender_phone || '',
+          email_address: lead.email_address || lead.conversation_id?.sender_email || '',
+          platform: lead.conversation_id?.platform || 'unknown',
+          external_chat_id: lead.conversation_id?.external_chat_id || '',
+          lead_tags: lead.lead_tags || [],
+          status: lead.status || 'New',
+        }));
+      }
+    } catch (err) {
+      console.warn('[leadService] Backend leads fetch error, using local fallback:', err.message);
+    }
+
     demoStore.ensureSeed();
     const conversations = demoStore.conversations();
     const messages = demoStore.messages();
@@ -33,14 +54,22 @@ export const leadService = {
     }).sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
   },
 
-  getLead(leadId) {
-    return this.listLeads().find((lead) => lead.id === leadId) || null;
+  async getLead(leadId) {
+    const list = await this.listLeads();
+    return list.find((lead) => lead.id === leadId) || null;
   },
 
-  updateLead(leadId, updates) {
+  async updateLead(leadId, updates) {
     demoStore.ensureSeed();
     const leads = demoStore.leads();
     const target = leads.find((lead) => lead.id === leadId);
+    const convId = target?.conversation_id || leadId;
+
+    try {
+      await api.patch(`/dashboard/leads/${convId}`, updates);
+    } catch (err) {
+      console.warn('[leadService] Backend lead update warning:', err.message);
+    }
     if (!target) throw new Error('That lead could not be found.');
     if (updates.status && !LEAD_STATUSES.includes(updates.status)) {
       throw new Error('Choose a valid lead status.');
@@ -65,12 +94,17 @@ export const leadService = {
     return this.listLeads();
   },
 
-  updateLeadForConversation(conversationId, updates) {
+  async updateLeadForConversation(conversationId, updates) {
+    try {
+      await api.patch(`/dashboard/leads/${conversationId}`, updates);
+    } catch (err) {
+      console.warn('[leadService] Backend update lead for conversation warning:', err.message);
+    }
     demoStore.ensureSeed();
     let lead = demoStore.leads().find((item) => item.conversation_id === conversationId);
     if (!lead) {
       const conversation = demoStore.conversations().find((item) => item.id === conversationId);
-      if (!conversation) throw new Error('That conversation could not be found.');
+      if (!conversation) return this.listLeads();
       lead = {
         id: demoStore.newId('lead'),
         conversation_id: conversationId,

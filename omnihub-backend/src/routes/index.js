@@ -27,6 +27,9 @@ import billingRoutes from './dashboard/billing.js';
 import subscriptionRoutes from './dashboard/subscription.js';
 import widgetRoutes from './dashboard/widget.js';
 import onboardingRoutes from './dashboard/onboarding.js';
+import menuRoutes from './dashboard/menus.js';
+import mediaRoutes from './dashboard/media.js';
+import teamRoutes from './dashboard/team.js';
 
 const router = Router();
 
@@ -61,6 +64,9 @@ router.use('/dashboard/billing', billingRoutes);
 router.use('/dashboard/subscription', subscriptionRoutes);
 router.use('/dashboard/widget', widgetRoutes);
 router.use('/dashboard/onboarding', onboardingRoutes);
+router.use('/dashboard/menus', menuRoutes);
+router.use('/dashboard/media', mediaRoutes);
+router.use('/dashboard/team', teamRoutes);
 
 // Direct Aliases for Frontend Compatibility
 router.use('/conversations', conversationRoutes);
@@ -79,5 +85,8 @@ router.use('/billing', billingRoutes);
 router.use('/subscription', subscriptionRoutes);
 router.use('/widget', widgetRoutes);
 router.use('/onboarding', onboardingRoutes);
+router.use('/menus', menuRoutes);
+router.use('/media', mediaRoutes);
+router.use('/team', teamRoutes);
 
 export default router;

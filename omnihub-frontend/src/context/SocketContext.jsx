@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { applyDeliveryReceipt, receiveMessage, setTyping } from '../store/messageSlice.js';
-import { receivePending } from '../store/approvalSlice.js';
+import { loadApprovals, receivePending } from '../store/approvalSlice.js';
 import { loadConversations, openConversation, syncFromStore } from '../store/conversationSlice.js';
 import { DIRECTION, MESSAGE_STATUS, SENDER_TYPE } from '../utils/constants.js';
 import { approvalService } from '../services/approvalService.js';
@@ -162,6 +162,15 @@ export function SocketProvider({ children }) {
         socket.on('conversation_update', () => dispatch(loadConversations()));
         socket.on('ai_suggestions', () => dispatch(loadConversations()));
         socket.on('autopilot_update', () => dispatch(loadConversations()));
+        socket.on('approval_resolved', () => {
+          dispatch(loadApprovals());
+          dispatch(loadConversations());
+        });
+        socket.on('draft_updated', () => dispatch(loadApprovals()));
+        socket.on('lead_updated', () => {
+          dispatch(loadLeads());
+          dispatch(loadConversations());
+        });
       })
       .catch((error) => {
         console.warn('Socket transport unavailable, staying on the local bus', error);

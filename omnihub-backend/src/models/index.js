@@ -18,3 +18,5 @@ export { WidgetConfig } from './WidgetConfig.js';
 export { OnboardingProgress } from './OnboardingProgress.js';
 export { ChannelConfig } from './ChannelConfig.js';
 export { AIContext } from './AIContext.js';
+export { MenuConfig } from './MenuConfig.js';
+export { TeamInvite } from './TeamInvite.js';

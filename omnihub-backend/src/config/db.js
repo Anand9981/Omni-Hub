@@ -4,7 +4,7 @@ import env from './env.js';
 export async function connectDB() {
   try {
     const conn = await mongoose.connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 15000,
     });
     console.log(`[Database] MongoDB Connected: ${conn.connection.host}`);
     return conn;

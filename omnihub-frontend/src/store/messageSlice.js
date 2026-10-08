@@ -73,6 +73,14 @@ export const activateMenuButton = createAsyncThunk(
       ...(button.action === 'media' ? attachment : {}),
       is_menu_interaction: true,
     });
+    // Dispatch click event to backend API
+    menuService.triggerButtonClick({
+      conversationId,
+      buttonId: button.id,
+      payload: button.id,
+      platform,
+    }).catch(() => {});
+
     return { conversationId, messages: [inbound, outbound] };
   },
 );

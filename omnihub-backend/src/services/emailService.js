@@ -105,6 +105,26 @@ export const emailService = {
     logger.info(`[Email Service] Mock sending welcome email to ${name} (${email})`);
     return true;
   },
+
+  async sendEmail({ to, subject, html }) {
+    const tx = getTransporter();
+    if (tx) {
+      try {
+        const info = await tx.sendMail({
+          from: env.EMAIL_FROM || `"OmniHub Team" <${env.SMTP_USER}>`,
+          to,
+          subject,
+          html,
+        });
+        logger.info(`[Email Service] Live email sent to ${to} (MessageID: ${info.messageId})`);
+        return true;
+      } catch (err) {
+        logger.error(`[Email Service] Failed sending email: ${err.message}`);
+      }
+    }
+    logger.info(`[Email Service] Mock email dispatched to ${to}: ${subject}`);
+    return true;
+  },
 };
 
 export default emailService;

@@ -1,4 +1,5 @@
 import { User, Conversation } from '../models/index.js';
+import teamService from '../services/teamService.js';
 import { ROLES, HTTP_STATUS } from '../utils/constants.js';
 import { formatResponse } from '../utils/helpers.js';
 import { emitEvent } from '../sockets/index.js';
@@ -6,27 +7,7 @@ import { emitEvent } from '../sockets/index.js';
 export const agentController = {
   async listAgents(_req, res, next) {
     try {
-      const agents = await User.find({
-        role: { $in: [ROLES.AGENT, ROLES.ADMIN, ROLES.SUPER_ADMIN] },
-        status: 'active',
-      }).select('name email role last_login created_at');
-
-      const enriched = await Promise.all(
-        agents.map(async (agent) => {
-          const assignedCount = await Conversation.countDocuments({
-            assigned_agent_id: agent._id,
-            status: 'ACTIVE',
-          });
-          return {
-            id: agent._id,
-            name: agent.name,
-            email: agent.email,
-            role: agent.role,
-            assignedCount,
-          };
-        }),
-      );
-
+      const enriched = await teamService.listMembers();
       return res.status(HTTP_STATUS.OK).json(
         formatResponse(true, enriched, 'Agents list retrieved.'),
       );

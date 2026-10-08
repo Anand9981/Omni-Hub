@@ -20,6 +20,12 @@ async function getGeminiClient() {
 /** Supported fallback models in order of preference */
 const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
 
+const callWithTimeout = (promise, ms = 6000) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms)),
+  ]);
+
 /**
  * Execute Gemini model call with resilient model fallback
  */
@@ -34,13 +40,16 @@ async function callGemini(contents, { json = false } = {}) {
         config.responseMimeType = 'application/json';
       }
 
-      const response = await client.models.generateContent({
-        model,
-        contents,
-        config,
-      });
+      const response = await callWithTimeout(
+        client.models.generateContent({
+          model,
+          contents,
+          config,
+        }),
+        6000,
+      );
 
-      const text = response.text?.trim();
+      const text = response?.text?.trim();
       if (text) {
         return { text, model };
       }

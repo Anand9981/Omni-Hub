@@ -8,6 +8,7 @@ const router = Router();
 router.use(protect);
 
 router.get('/pending', approvalController.getPendingApprovals);
+router.get('/resolved', approvalController.getResolvedApprovals);
 router.post('/:id/approve', requireAdmin, approvalController.approveDraft);
 router.post('/:id/reject', requireAdmin, approvalController.rejectDraft);
 router.post('/:id/edit', requireAdmin, approvalController.editAndApproveDraft);

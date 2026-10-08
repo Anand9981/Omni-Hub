@@ -127,6 +127,8 @@ function validateButtons(buttons, platform, mediaIds, depth = 1) {
   });
 }
 
+import api from '../api/axios.js';
+
 export const menuService = {
   platforms: Object.keys(PLATFORM_LIMITS).map((id) => ({ id, label: PLATFORM_LABELS[id] })),
   platformLimits: PLATFORM_LIMITS,
@@ -138,6 +140,29 @@ export const menuService = {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(menus));
     }
     return structuredClone(menus[platform]);
+  },
+
+  async getMenuAsync(platform = 'whatsapp') {
+    try {
+      const res = await api.get(`/dashboard/menus/${platform}`);
+      if (res.data?.success && res.data.data) {
+        const d = res.data.data;
+        const normalized = {
+          platform,
+          welcomeMessage: d.welcome_message || d.welcomeMessage || 'Thank you for choosing OmniHub!',
+          buttons: d.buttons || [],
+          mediaAssets: d.media_assets || d.mediaAssets || [],
+          updatedAt: d.updated_at || new Date().toISOString(),
+        };
+        const menus = readAll();
+        menus[platform] = normalized;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(menus));
+        return normalized;
+      }
+    } catch (err) {
+      console.warn('[menuService] Backend menu fetch warning:', err.message);
+    }
+    return this.getMenu(platform);
   },
 
   saveMenu(menu) {
@@ -158,7 +183,46 @@ export const menuService = {
     const saved = { ...structuredClone(menu), updatedAt: new Date().toISOString() };
     menus[menu.platform] = saved;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(menus));
+
+    // Non-blocking sync with backend
+    api.post(`/dashboard/menus/${menu.platform}`, {
+      platform: menu.platform,
+      welcome_message: menu.welcomeMessage,
+      buttons: menu.buttons,
+      media_assets: menu.mediaAssets,
+      is_active: true,
+    }).catch((err) => console.warn('[menuService] Backend menu save warning:', err.message));
+
     return structuredClone(saved);
+  },
+
+  async triggerButtonClick({ conversationId, buttonId, payload, platform }) {
+    try {
+      const res = await api.post('/dashboard/menus/click', {
+        conversationId,
+        buttonId,
+        payload,
+        platform,
+      });
+      return res.data?.data;
+    } catch (err) {
+      console.warn('[menuService] Trigger button click error:', err.message);
+      return null;
+    }
+  },
+
+  async sendMenuToConversation({ conversationId, platform, welcomeMessage }) {
+    try {
+      const res = await api.post('/dashboard/menus/send', {
+        conversationId,
+        platform,
+        welcomeMessage,
+      });
+      return res.data?.data;
+    } catch (err) {
+      console.warn('[menuService] Send menu to conversation error:', err.message);
+      return null;
+    }
   },
 
   findMediaForText(platform, text) {

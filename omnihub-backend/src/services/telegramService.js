@@ -29,9 +29,16 @@ async function pollUpdates() {
       if (data.ok && Array.isArray(data.result)) {
         for (const update of data.result) {
           lastUpdateId = update.update_id;
+          if (update.callback_query?.id) {
+            fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ callback_query_id: update.callback_query.id }),
+            }).catch(() => {});
+          }
           const normalized = normalizer.normalizeTelegram(update);
-          if (normalized && (normalized.text_content || normalized.media_url)) {
-            logger.info(`[Telegram Inbound] Message from ${normalized.sender_name} (${normalized.external_chat_id}): "${normalized.text_content.slice(0, 40)}"`);
+          if (normalized && (normalized.text_content || normalized.media_url || normalized.button_payload)) {
+            logger.info(`[Telegram Inbound] Message from ${normalized.sender_name} (${normalized.external_chat_id}): "${(normalized.text_content || normalized.button_payload).slice(0, 40)}"`);
             await conversationService.processInboundMessage(normalized);
           }
         }

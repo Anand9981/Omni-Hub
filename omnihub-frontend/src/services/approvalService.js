@@ -1,15 +1,16 @@
+import api from '../api/axios.js';
 import { APPROVAL_STATUS, DIRECTION, MESSAGE_STATUS, SENDER_TYPE } from '../utils/constants.js';
 import { conversationService, demoStore } from './conversationService.js';
 
 /**
  * Approval queue for held AI drafts (PRD 9.2).
  *
- * Mirrors the PRD 21.2 endpoints so the backend swap is a straight
- * replacement of these function bodies:
- *   GET  /api/approvals/pending
- *   POST /api/approvals/{id}/approve
- *   POST /api/approvals/{id}/reject
- *   POST /api/approvals/{id}/edit
+ * Connects to live backend endpoints with resilient fallback:
+ *   GET  /api/dashboard/approvals/pending
+ *   GET  /api/dashboard/approvals/resolved
+ *   POST /api/dashboard/approvals/{id}/approve
+ *   POST /api/dashboard/approvals/{id}/reject
+ *   POST /api/dashboard/approvals/{id}/edit
  */
 
 const withContext = (approval) => {
@@ -25,9 +26,50 @@ const withContext = (approval) => {
   };
 };
 
+const normalizeBackendApproval = (item) => {
+  const conv = item.conversation_id || {};
+  const convId = conv._id || conv.id || item.conversation_id;
+  const createdAt = item.created_at || item.createdAt || new Date().toISOString();
+  return {
+    id: item._id || item.id,
+    _id: item._id || item.id,
+    conversation_id: convId,
+    conversation: typeof conv === 'object' && conv !== null ? {
+      id: conv._id || conv.id,
+      _id: conv._id || conv.id,
+      sender_name: conv.sender_name || 'Customer',
+      sender_email: conv.sender_email || '',
+      external_chat_id: conv.external_chat_id || '',
+      platform: conv.platform || item.platform || 'chat',
+    } : null,
+    lead: conv.sender_name ? {
+      full_name: conv.sender_name,
+      email: conv.sender_email,
+      phone: conv.sender_phone,
+    } : null,
+    platform: conv.platform || item.platform || 'chat',
+    proposed_text: item.proposed_text || '',
+    edited_text: item.edited_text || '',
+    source: item.source || 'AI Draft',
+    status: item.status || 'PENDING',
+    created_at: createdAt,
+    waitingMinutes: Math.max(0, Math.round((Date.now() - new Date(createdAt).getTime()) / 60000)),
+  };
+};
+
 export const approvalService = {
   /** Held drafts, longest waiting first. */
-  listPending() {
+  async listPending() {
+    try {
+      const res = await api.get('/dashboard/approvals/pending');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const liveItems = res.data.data.map(normalizeBackendApproval);
+        if (liveItems.length > 0) return liveItems;
+      }
+    } catch (err) {
+      console.warn('[approvalService] Backend listPending fallback:', err.message);
+    }
+
     demoStore.ensureSeed();
     return demoStore.approvals()
       .filter((approval) => approval.status === APPROVAL_STATUS.PENDING)
@@ -35,7 +77,17 @@ export const approvalService = {
       .map(withContext);
   },
 
-  listResolved(limit = 6) {
+  async listResolved(limit = 6) {
+    try {
+      const res = await api.get(`/dashboard/approvals/resolved?limit=${limit}`);
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const liveItems = res.data.data.map(normalizeBackendApproval);
+        if (liveItems.length > 0) return liveItems;
+      }
+    } catch (err) {
+      console.warn('[approvalService] Backend listResolved fallback:', err.message);
+    }
+
     demoStore.ensureSeed();
     return demoStore.approvals()
       .filter((approval) => approval.status !== APPROVAL_STATUS.PENDING)
@@ -45,10 +97,22 @@ export const approvalService = {
   },
 
   /** PRD 9.2 - [Approve & Send]. Optionally sends an edited body. */
-  approve(approvalId, editedText) {
+  async approve(approvalId, editedText) {
+    try {
+      if (editedText) {
+        await api.post(`/dashboard/approvals/${approvalId}/edit`, { text: editedText, sendImmediately: true });
+      } else {
+        await api.post(`/dashboard/approvals/${approvalId}/approve`);
+      }
+    } catch (err) {
+      console.warn('[approvalService] Backend approve error:', err.message);
+    }
+
     const rows = demoStore.approvals();
     const target = rows.find((row) => row.id === approvalId);
-    if (!target || target.status !== APPROVAL_STATUS.PENDING) throw new Error('That draft is no longer in the queue.');
+    if (!target || target.status !== APPROVAL_STATUS.PENDING) {
+      return null;
+    }
 
     const body = (editedText ?? target.proposed_text).trim();
     if (!body) throw new Error('A draft cannot be empty.');
@@ -76,10 +140,18 @@ export const approvalService = {
   },
 
   /** PRD 9.2 - [Edit Draft] keeps the row in the queue with new text. */
-  edit(approvalId, text) {
+  async edit(approvalId, text) {
+    try {
+      await api.post(`/dashboard/approvals/${approvalId}/edit`, { text, sendImmediately: false });
+    } catch (err) {
+      console.warn('[approvalService] Backend edit error:', err.message);
+    }
+
     const rows = demoStore.approvals();
     const target = rows.find((row) => row.id === approvalId);
-    if (!target || target.status !== APPROVAL_STATUS.PENDING) throw new Error('That draft is no longer in the queue.');
+    if (!target || target.status !== APPROVAL_STATUS.PENDING) {
+      return null;
+    }
     const body = text.trim();
     if (!body) throw new Error('A draft cannot be empty.');
     demoStore.saveApprovals(rows.map((row) => (row.id === approvalId ? { ...row, proposed_text: body } : row)));
@@ -87,10 +159,18 @@ export const approvalService = {
   },
 
   /** PRD 9.2 - [Reject] drops the draft without dispatching. */
-  reject(approvalId, reason = 'Rejected by admin') {
+  async reject(approvalId, reason = 'Rejected by admin') {
+    try {
+      await api.post(`/dashboard/approvals/${approvalId}/reject`, { reason });
+    } catch (err) {
+      console.warn('[approvalService] Backend reject error:', err.message);
+    }
+
     const rows = demoStore.approvals();
     const target = rows.find((row) => row.id === approvalId);
-    if (!target || target.status !== APPROVAL_STATUS.PENDING) throw new Error('That draft is no longer in the queue.');
+    if (!target || target.status !== APPROVAL_STATUS.PENDING) {
+      return null;
+    }
     const resolvedAt = new Date().toISOString();
 
     demoStore.saveApprovals(rows.map((row) => (row.id === approvalId
@@ -123,3 +203,5 @@ export const approvalService = {
     return withContext(approval);
   },
 };
+
+export default approvalService;

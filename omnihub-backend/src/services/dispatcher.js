@@ -6,7 +6,7 @@ export const dispatcher = {
   /**
    * Send live Telegram message using Bot API
    */
-  async sendTelegramMessage(chatId, text) {
+  async sendTelegramMessage(chatId, text, buttons = []) {
     if (!env.TELEGRAM_BOT_TOKEN || env.TELEGRAM_BOT_TOKEN === 'demo_telegram_token') {
       logger.info(`[Dispatcher Mock Telegram] (${chatId}): "${text?.slice(0, 30)}"`);
       return { success: true, status: MESSAGE_STATUS.DELIVERED };
@@ -14,10 +14,19 @@ export const dispatcher = {
 
     try {
       const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+      const bodyPayload = { chat_id: chatId, text };
+      if (Array.isArray(buttons) && buttons.length > 0) {
+        bodyPayload.reply_markup = {
+          inline_keyboard: buttons.map((b) => [
+            { text: b.label || b.title, callback_data: b.id || b.label },
+          ]),
+        };
+      }
+
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text }),
+        body: JSON.stringify(bodyPayload),
       });
       const data = await response.json();
       if (data.ok) {
@@ -75,7 +84,7 @@ export const dispatcher = {
     logger.info(`[Dispatcher] Dispatching outbound message to [${platform}] (${external_chat_id}): "${text_content?.slice(0, 30)}"`);
 
     if (platform === 'telegram') {
-      return this.sendTelegramMessage(external_chat_id, text_content);
+      return this.sendTelegramMessage(external_chat_id, text_content, buttons);
     }
 
     if (platform === 'whatsapp') {

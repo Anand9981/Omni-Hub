@@ -11,10 +11,20 @@ export const approvalService = {
       .sort({ created_at: -1 });
   },
 
+  async listResolved(limit = 10) {
+    return PendingApproval.find({ status: { $ne: 'PENDING' } })
+      .populate('conversation_id')
+      .populate('reviewer_id', 'name email role')
+      .sort({ updatedAt: -1, created_at: -1 })
+      .limit(limit);
+  },
+
   async approveDraft(approvalId, reviewerId) {
     const approval = await PendingApproval.findById(approvalId);
     if (!approval) throw new Error('Pending approval not found.');
-    if (approval.status !== 'PENDING') throw new Error(`Approval is already in state: ${approval.status}`);
+    if (approval.status !== 'PENDING' && approval.status !== 'EDITED') {
+      throw new Error(`Approval is already in state: ${approval.status}`);
+    }
 
     const conversation = await Conversation.findById(approval.conversation_id);
     if (!conversation) throw new Error('Conversation thread not found.');
@@ -35,7 +45,7 @@ export const approvalService = {
       sender_type: 'BOT',
       direction: MESSAGE_DIRECTIONS.OUTBOUND,
       text_content: finalText,
-      status: dispatchResult.status,
+      status: dispatchResult.status || MESSAGE_STATUS.DELIVERED,
     });
 
     // 3. Mark approval resolved
@@ -60,6 +70,13 @@ export const approvalService = {
       conversationId: conversation._id,
     });
 
+    emitEvent('conversation_update', {
+      id: conversation._id,
+      platform: conversation.platform,
+      last_activity_at: conversation.last_activity_at,
+      heldDraft: null,
+    });
+
     logger.info(`[Approval Service] Approved AI draft ${approval._id} for conversation ${conversation._id}`);
     return { approval, message };
   },
@@ -79,7 +96,31 @@ export const approvalService = {
       conversationId: approval.conversation_id,
     });
 
+    emitEvent('conversation_update', {
+      id: approval.conversation_id,
+      heldDraft: null,
+    });
+
     logger.info(`[Approval Service] Rejected AI draft ${approval._id}`);
+    return approval;
+  },
+
+  async editDraft(approvalId, editedText) {
+    const approval = await PendingApproval.findById(approvalId);
+    if (!approval) throw new Error('Pending approval not found.');
+
+    approval.proposed_text = editedText.trim();
+    approval.edited_text = editedText.trim();
+    approval.status = 'EDITED';
+    await approval.save();
+
+    emitEvent('draft_updated', {
+      approvalId: approval._id,
+      proposed_text: approval.proposed_text,
+      conversationId: approval.conversation_id,
+    });
+
+    logger.info(`[Approval Service] Edited draft text for ${approval._id}`);
     return approval;
   },
 
@@ -88,6 +129,7 @@ export const approvalService = {
     if (!approval) throw new Error('Pending approval not found.');
 
     approval.edited_text = editedText.trim();
+    approval.proposed_text = editedText.trim();
     approval.status = 'EDITED';
     await approval.save();
 

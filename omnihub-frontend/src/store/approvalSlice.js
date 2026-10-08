@@ -7,23 +7,23 @@ import { aiService } from '../services/aiService.js';
    ------------------------------------------------------------ */
 
 export const loadApprovals = createAsyncThunk('approvals/load', async () => ({
-  pending: approvalService.listPending(),
-  resolved: approvalService.listResolved(),
+  pending: await approvalService.listPending(),
+  resolved: await approvalService.listResolved(),
 }));
 
 export const approveDraft = createAsyncThunk('approvals/approve', async ({ approvalId, text }) => {
-  approvalService.approve(approvalId, text);
-  return { pending: approvalService.listPending(), resolved: approvalService.listResolved() };
+  await approvalService.approve(approvalId, text);
+  return { pending: await approvalService.listPending(), resolved: await approvalService.listResolved() };
 });
 
 export const rejectDraft = createAsyncThunk('approvals/reject', async ({ approvalId, reason }) => {
-  approvalService.reject(approvalId, reason);
-  return { pending: approvalService.listPending(), resolved: approvalService.listResolved() };
+  await approvalService.reject(approvalId, reason);
+  return { pending: await approvalService.listPending(), resolved: await approvalService.listResolved() };
 });
 
 export const saveDraftEdit = createAsyncThunk('approvals/edit', async ({ approvalId, text }) => {
-  approvalService.edit(approvalId, text);
-  return { pending: approvalService.listPending(), resolved: approvalService.listResolved() };
+  await approvalService.edit(approvalId, text);
+  return { pending: await approvalService.listPending(), resolved: await approvalService.listResolved() };
 });
 
 /** PRD 9.3 - [Polish with AI] rewrites a rough note in its detected language. */
