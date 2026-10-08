@@ -1,0 +1,56 @@
+# ==============================================================================
+# OmniHub Root .gitignore
+# ==============================================================================
+
+# 🛑 CRITICAL SECURITY: Never commit actual environment files containing secrets!
+**/.env
+**/.env.*
+**/*.env
+.env
+.env.*
+*.env
+
+# Whitelist .env.example files so contributors have templates
+!**/.env.example
+!**/.env.*.example
+!.env.example
+
+# Dependencies
+**/node_modules/
+node_modules/
+
+# Build outputs
+**/dist/
+dist/
+**/build/
+build/
+
+# Logs
+**/logs/
+logs/
+**/*.log
+*.log
+
+# Testing & Coverage
+**/coverage/
+coverage/
+.nyc_output/
+
+# Temporary & Cache
+.cache/
+.temp/
+.tmp/
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor folders
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

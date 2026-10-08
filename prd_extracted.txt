@@ -1,0 +1,1205 @@
+PRODUCT REQUIREMENT DOCUMENT
+OmniHub — Multiplatform Messaging & Automation Hub
+Field
+Details
+Document Title
+OmniHub Trial Platform — Comprehensive Technical & Operational PRD
+Project Codename
+OmniHub Trial (Phase 0)
+Prepared By
+Parmanand Sahu
+For
+Internal Trial & Client Demonstration
+Approved By
+Project Manager
+Document Status
+Final Draft — Trial Ready
+Version
+1.0.0
+Target Release
+21 Days (Phased Delivery)
+Backend
+Python (FastAPI)
+Frontend
+React.js
+AI Engine
+Google Gemini
+Database
+PostgreSQL (Supabase Free Tier)
+Final technical and operational requirements
+TABLE OF CONTENTS
+1. Executive Overview & Product Vision
+2. Goals & Objectives
+3. Target Audience / Users
+4. Trial vs Production Scope
+5. Authentication & User Onboarding
+6. Universal Ingestion & Data Normalization Engine
+7. Interactive Menu & Rich-Media Dispatch Engine
+8. Multi-Lingual AI Engine & Prompt Engineering
+9. Client Dashboard & Approval Workflow
+10. Real-Time Lead Extraction & CRM Sidebar
+11. Website Chat Widget
+12. Graphical Analytics, Dashboard Charts & Platform Metrics
+13. Conversation Assignment & Agent Management
+14. Canned Responses & Quick Replies
+15. Message Search & Filter
+16. Conversation Notes & Internal Comments
+17. Business Hours & Away Messages
+18. Message Templates (WhatsApp)
+19. Message Status & Delivery Receipts
+20. Rate Limiting & Spam Prevention
+21. API Integration & System Architecture
+22. Database Architecture & Schemas
+23. Security, Compliance & Exception Handling
+24. Backup & Restore
+25. Monitoring, Alerting & Logging
+26. CI/CD Pipeline
+27. Testing, QA & Acceptance Criteria
+28. Documentation
+29. Developer Onboarding & Handover Playbook
+30. Client Onboarding Flow
+31. Channel-Wise API Setup Guide
+32. Billing & Subscription (Future Scope)
+33. Trial Timeline & Milestones
+34. Success Metrics & KPIs
+35. Risks & Mitigation
+36. Future Scope (Production Phase)
+37. Appendix
+1. EXECUTIVE OVERVIEW & PRODUCT VISION
+1.1 Problem Statement
+Modern businesses interact with customers across diverse communication channels including WhatsApp, Instagram, Telegram, Discord, LinkedIn, and Website Live Chat Widgets. Managing these channels separately leads to critical operational bottlenecks:
+• High Response Delays: Delayed responses to routine customer inquiries lead to missed business opportunities.
+• Repetitive Manual Work: Support representatives spend excessive time answering recurring questions regarding pricing, setup instructions, and catalogs.
+• Risk of AI Misinformation: Fully autonomous AI bots can generate inaccurate pricing or unverified offers, negatively impacting brand reputation.
+• Fragmented Customer Data & Invisible Metrics: Customer contacts are scattered without central CRM synchronization, and business owners lack visibility into channel traffic, message counts, and agent response performance across platforms.
+• Zero Cross-Channel Analytics: Business owners cannot answer basic questions such as "How many messages arrived on WhatsApp today versus Instagram?" — leading to blind operational decisions.
+1.2 Product Vision
+OmniHub consolidates customer interactions from six primary messaging channels into a single central dashboard. The system integrates:
+1. Automated post-service interactive button navigation.
+2. Instant delivery of rich media assets such as PDF brochures, catalogs, and images.
+3. Gemini AI auto-responses for open queries in English, Hindi, and Hinglish.
+4. Client Approval Mode (Human-in-the-Loop) allowing business owners to review, edit, and approve AI replies before delivery.
+5. An Auto-Pilot Switch enabling seamless transition between automated responses and direct human agent takeover.
+6. Real-time Graphical Analytics and Daily Channel Traffic Reports providing visual insights into inbound messages versus outbound replies across all connected applications.
+7. Multi-Channel Daily Traffic Dashboard — app-wise inbound and outbound counters with four interactive graphs (Bar, Donut, Line, Stacked).
+2. GOALS & OBJECTIVES
+2.1 Business Goals
+#
+Goal
+Success Metric
+G1
+Demonstrate multi-channel message ingestion
+Five or more channels receiving live messages during trial
+G2
+Prove AI auto-reply quality across three languages
+Ninety percent or higher language match accuracy in demonstration
+G3
+Showcase Human-in-the-Loop approval
+Client can approve, reject, or edit within five seconds
+G4
+Deliver real-time analytics value
+Dashboard updates within two seconds of message arrival
+G5
+Prove free-tier feasibility
+Zero infrastructure cost during trial
+2.2 Technical Goals
+#
+Goal
+Success Metric
+T1
+Sub-1.5 second auto-reply latency
+Webhook to AI to Outbound under 1500 milliseconds
+T2
+Webhook signature validation
+One hundred percent HMAC-SHA256 verification for Meta platforms
+T3
+Data normalization
+All platforms to Universal Schema in under 200 milliseconds
+T4
+Real-time dashboard
+Socket.io push, no page refresh required
+T5
+Zero-downtime analytics
+Counters increment atomically
+3. TARGET AUDIENCE / USERS
+Persona
+Role
+Primary Need
+Business Owner
+Client (decision maker)
+See all channels in one place, approve replies, view analytics
+Support Agent
+Human-in-the-loop
+Takeover conversations, polish AI drafts, tag leads
+Operations Manager
+Analytics consumer
+Daily traffic reports, peak hour insights, export CSV or PDF
+Developer (Intern)
+Builder
+Clean codebase, clear module separation, free-tier deployable
+4. TRIAL VS PRODUCTION SCOPE
+Aspect
+Trial Phase (Current)
+Production Phase (Future)
+Channels
+Telegram, Discord, Website Chat (Live) plus WhatsApp, Instagram (Sandbox or Mock)
+All six channels live with verified business accounts
+AI
+Gemini Free Tier (15 requests per minute)
+Gemini Pro or Paid Tier with higher throughput
+Database
+Supabase Free Tier (500 MB)
+AWS RDS PostgreSQL with Read Replicas
+Hosting
+Render Free plus Vercel Free plus Ngrok
+AWS ECS or GCP Cloud Run
+Analytics
+Daily and Hourly counters (basic)
+Predictive analytics with ML forecasting
+Approval Workflow
+Basic pending queue
+Full audit trail with SLA tracking
+LinkedIn
+Skipped (Partner Program pending)
+Full integration post-approval
+5. AUTHENTICATION & USER ONBOARDING
+This module handles dashboard login, OTP verification, and user account management.
+5.1 Admin Registration & Login
+• Email and Password registration — Admin creates their own account
+• Email verification — A verification link is sent to the registered email after signup
+• Password policy — Minimum eight characters, one uppercase letter, one number, one special character
+• Login with Email and Password — A JWT token is generated
+• Remember Me option — Session maintained for thirty days
+• Forgot Password — A reset link is sent to the registered email
+• Password reset token — Expires within fifteen minutes
+5.2 OTP Verification (Two-Factor Authentication)
+• OTP after login — A six-digit OTP is sent to the registered email
+• OTP expiry — Five minutes
+• Resend OTP — Thirty second cooldown, maximum three attempts
+• Maximum attempts — Account locked for fifteen minutes after five incorrect OTP entries
+• Device binding — Device is remembered after successful OTP verification
+• Backup codes — Ten emergency codes are generated
+5.3 Session Management
+• JWT Access Token — Fifteen minute validity
+• Refresh Token — Seven day validity, rotated on every refresh
+• Concurrent session limit — Maximum three devices
+• Session timeout — Automatic logout after thirty minutes of inactivity
+• Login audit log — IP address, device, and timestamp saved for every login
+• Suspicious login alert — Email alert on login from a new device or location
+5.4 User Roles
+• Super Admin — Full system access
+• Admin — Dashboard access, can approve
+• Agent — Handles conversations only
+• Viewer — Read-only access, cannot make changes
+6. UNIVERSAL INGESTION & DATA NORMALIZATION ENGINE
+This engine receives incoming messages from every platform, validates their origin, and converts them into a common format.
+6.1 Platform Webhook Receivers
+Each platform has its own webhook endpoint:
+Telegram Bot API Receiver
+• Endpoint: /api/webhooks/telegram
+• Receives text messages, button clicks, and voice clips
+• Verified using Bot Token
+• Free and the easiest setup
+Discord Gateway Receiver
+• Endpoint: /api/webhooks/discord
+• Captures direct messages and channel messages
+• Verified using Bot Token
+• Free and unlimited
+Instagram Graph API Receiver
+• Endpoint: /api/webhooks/instagram
+• Receives DMs, story mentions, and media replies
+• Verified using Meta Webhook signature
+WhatsApp Cloud API Receiver
+• Endpoint: /api/webhooks/whatsapp
+• Receives incoming messages, button clicks, and media receipts
+• Verified using Meta Cloud API
+LinkedIn Messaging Receiver
+• Endpoint: /api/webhooks/linkedin
+• Captures organization page messages
+• Skipped during trial, added later
+Website Live Chat Socket Engine
+• Real-time bi-directional connection
+• Connected to the website widget through Socket.io
+• One hundred percent free, self-built
+6.2 Webhook Security & Verification
+• Signature Validation — X-Hub-Signature-256 verified using HMAC-SHA256 for Meta platforms (WhatsApp and Instagram)
+• Token Verification — Authorization token checked for Telegram and Discord
+• Replay Attack Prevention — Duplicate messages rejected using timestamp and unique ID
+• IP Whitelisting — Webhooks accepted only from trusted IP addresses
+• Rate Limiting — Maximum one thousand requests per minute per platform
+6.3 Data Normalizer (Universal Schema)
+Every platform sends messages in a different format. The normalizer converts them into a common format:
+• message_id — System-wide unique identifier
+• platform — Source channel (telegram, discord, and so on)
+• external_chat_id — Platform's own chat identifier
+• sender_name — User's name
+• sender_contact — Phone or email, if available
+• message_type — TEXT, BUTTON_CLICK, MEDIA, or VOICE
+• text_content — Message text
+• media_url — Link to media, if present
+• timestamp — ISO-8601 UTC format
+6.4 Message Deduplication
+• Unique message_id — Every message's unique ID is saved in the database
+• Duplicate detection — The same message arriving again is ignored
+• Idempotency — Webhook retries do not cause double counting
+7. INTERACTIVE MENU & RICH-MEDIA DISPATCH ENGINE
+This module handles buttons, menus, and file delivery.
+7.1 Post-Service Interactive Button Flows
+Automatic Welcome or Thank You Message
+• Triggered automatically after a service is completed
+• A message such as "Thank you for choosing us!" is sent
+• Three or four interactive buttons are attached
+Primary Interactive Button Menu
+• Option 1: [How to Setup] — Step-by-step setup guide with PDF link
+• Option 2: [View Services] — Sub-menu showing packages and pricing
+• Option 3: [Contact Support or AI Query] — User can type a custom query or request a human agent
+• Option 4: [Talk to Human] — Direct agent handover
+Nested Sub-Menu Routing
+• Supports nested buttons up to three levels deep
+• A [Back] button on every level
+• An option to return to the [Main Menu]
+7.2 Dynamic Media Attachment Dispatcher
+• Keyword Matcher — If a user types "brochure", "catalog", "qr code", or "pricing", the file is sent automatically
+• Native File Dispatcher
+• PDF documents such as setup_guide.pdf and product_catalog.pdf
+• High-resolution images such as payment_qr.png and office_location.jpg
+• Fallback Link Delivery — If the file cannot be attached due to size limits, a secure HTTPS link is sent instead
+7.3 Platform-Specific Button Rendering
+• Telegram — InlineKeyboardMarkup (unlimited buttons)
+• Discord — Message Components (five per row)
+• WhatsApp — Interactive Buttons (maximum three)
+• Instagram — Quick Replies (maximum thirteen)
+• Website — Custom HTML buttons (unlimited)
+8. MULTI-LINGUAL AI ENGINE & PROMPT ENGINEERING
+This module generates AI responses to open-ended queries.
+8.1 Multi-Lingual Capabilities
+• English — Complete comprehension and fluent generation
+• Hindi (Devanagari) — Responses in formal Hindi script
+• Hinglish (Roman Script) — For example, "Account setup kaise karein?" receives "Account setup karne ke liye inn steps ko follow karein..."
+• Language Matcher Guarantee — The AI always replies in the user's own language
+8.2 Knowledge Base & Context Rules
+• Business Context Injection — Business name, services, working hours, pricing, and asset links are supplied to the AI
+• Anti-Hallucination Guardrails
+• The AI cannot invent fake prices, offers, or promises
+• If a query cannot be answered: "Main aapki query note kar raha hoon. Hamari team jald hi aapase contact karegi."
+• Response Length Limit — Maximum three sentences
+• Tone Control — Professional, friendly, and helpful
+8.3 AI Response Generation Flow
+1. The user's message is received
+2. The language is detected
+3. The message is sent to the AI with business context
+4. The AI generates a reply
+5. The reply is trimmed to three sentences
+6. The client approval mode is checked
+7. The message is sent once approved
+8.4 AI Fallback Handling
+• Gemini API Down — "Our AI service is busy. A support agent will assist you shortly."
+• Timeout — Same fallback message
+• Rate Limit — Queued for retry
+• Invalid Response — Forwarded to a human agent
+9. CLIENT DASHBOARD & APPROVAL WORKFLOW
+This is a three-panel React dashboard where the client manages everything.
+9.1 Unified Inbox UI
+Left Panel (Chat List Directory)
+• Active conversations sorted by latest activity
+• Channel badges such as Telegram, WhatsApp, and Instagram
+• Filter tabs: All, Pending Approval, Unread, Human Assigned
+• Search bar for finding conversations
+• Unread count badge
+Center Panel (Active Conversation Window)
+• Real-time chat feed
+• Different colors for User, AI Bot, and Agent messages
+• Message status indicators: Sent, Delivered, Pending Approval, Rejected
+• Response draft area with a manual input box
+• Action controls: Send, Approve, Edit, Reject
+Right Panel (Lead Details & Controls Sidebar)
+• Customer profile: Name, Platform ID, Phone, Email
+• Auto-pilot switch [ON/OFF]
+• Customer tags such as #HOT_LEAD, #PRICING_INQUIRY, #SETUP_ISSUE
+• Conversation history
+• Notes section
+9.2 Client Approval Toggle (Human-in-the-Loop)
+Toggle State = ON (Auto-Approval Mode)
+• AI and automated responses are sent immediately
+• No manual intervention required
+Toggle State = OFF (Manual Approval Mode)
+• Generated responses are held in the PENDING_APPROVAL queue
+• Highlighted on the dashboard
+• Action controls:
+• [Approve & Send] — Send immediately
+• [Edit Draft] — Edit the text before sending
+• [Reject] — Cancel the message
+9.3 AI Rephrase / Polish Tool
+• A [Polish with AI] button in the manual editor
+• An agent types a rough note such as "aaj office band hai kal baat karenge"
+• The AI converts it into a professional message: "Thank you for reaching out. Our office is currently closed today. We will connect with you tomorrow."
+• The original intent is preserved
+9.4 Auto-Pilot vs Human Agent Takeover Switch
+• An [Auto-Pilot: ON/OFF] switch in every conversation header
+• Takeover Mode (OFF) — All automated triggers disabled for that thread
+• Auto Mode (ON) — AI and menu responses enabled
+• Per-conversation control — One thread handled by a human, another by AI
+9.5 Message Status Indicators
+• Sent — Message dispatched
+• Delivered — Reached the platform
+• Read — User has read it, if the platform supports it
+• Pending Approval — Awaiting client approval
+• Rejected — Rejected by the client
+• Failed — Delivery error
+10. REAL-TIME LEAD EXTRACTION & CRM SIDEBAR
+This module automatically extracts customer details.
+10.1 Real-Time Lead Parsing
+• Pattern Extraction Engine — Every message is scanned for:
+• Email addresses
+• Ten-digit phone numbers
+• Name introductions such as "My name is..." or "I am..."
+• Auto-population — Extracted details appear immediately in the Right Sidebar
+• No page reload — Updated in real time
+10.2 Lead Display & Tagging
+• Customer profile — Name, phone, email, platform ID
+• Manual tags — Agents can add their own tags
+• Auto tags — #HOT_LEAD, #PRICING_INQUIRY, #SETUP_ISSUE
+• Lead status — New, Contacted, Qualified, Converted, Lost
+10.3 CRM Integration (Future)
+• Export to CSV or Excel
+• Webhook to external CRM
+• API access for third-party tools
+11. WEBSITE CHAT WIDGET
+This module embeds a chat widget on the client's website.
+11.1 Widget Features
+• Floating chat button — Bottom-right corner of the website
+• Customizable colors — Client can set brand colors
+• Welcome message — Automatic message when the widget opens
+• Pre-chat form — Name, email, and phone (optional)
+• File upload — Users can send PDFs or images
+• Typing indicator — "Agent is typing..."
+• Offline mode — Displays a form when no agent is available
+• Mobile responsive — Works on mobile devices
+11.2 Embed Code
+The client pastes a single <script> tag into their website:
+<script>window.OmniHubConfig = {apiKey: "CLIENT_API_KEY",theme: "light",position: "bottom-right",welcomeMessage: "Hi! How can we help you today?"};</script><script src="https://omnihub.vercel.app/widget.js" async></script>
+11.3 Widget Customization
+• Colors — Primary, secondary, text
+• Position — Bottom-right or bottom-left
+• Size — Small, medium, large
+• Language — English, Hindi, or Hinglish
+• Business hours — "We're offline" message outside working hours
+• Avatar — Agent's photo
+• Sound notification — Plays sound on new message
+11.4 Widget Analytics
+• Widget opens — Number of times opened
+• Messages sent — Number of messages received
+• Conversion rate — Chats that became leads
+• Average session time — Duration of chats
+12. GRAPHICAL ANALYTICS, DASHBOARD CHARTS & PLATFORM METRICS
+This module shows how many messages arrived on each app today and how many replies were sent.
+12.1 Real-Time Daily Channel Volume Tracker
+App-Wise Inbound & Outbound Counter
+• For every platform:
+• Inbound Count (messages received)
+• Outbound AI Replies (sent by AI)
+• Outbound Human Replies (sent by agents)
+• Outbound Menu Replies (sent via menu)
+• Pending Count (awaiting approval)
+Date Range Selector
+• Today
+• Yesterday
+• Last 7 Days
+• Last 30 Days
+• Custom date range
+12.2 Interactive Graphical Visualization Suite
+1. Multi-Platform Comparison Bar Chart
+• Grouped side-by-side vertical bars
+• Inbound versus Outbound for each platform
+• Color branding: Green (WhatsApp), Magenta (Instagram), Blue (Telegram), Purple (Discord), Dark Blue (LinkedIn), Teal (Web Chat)
+2. Channel Distribution Donut Chart
+• Percentage share of total incoming traffic
+• Example: 40% WhatsApp, 25% Instagram, 15% Telegram, 10% Web Chat, 6% Discord, 4% LinkedIn
+3. Hourly Peak Traffic Line Graph
+• Twenty-four-hour timeline
+• Shows message spikes
+• Helps identify peak hours
+• Useful for staffing decisions
+4. Response Breakdown Stacked Chart
+• AI Auto-Replied
+• Interactive Button Menu Dispatched
+• Human Agent Approved or Sent
+• Pending Approval
+12.3 Top-Level KPI Scorecards
+1. Total Daily Messages Processed — Inbound plus Outbound
+2. AI Resolution and Automation Rate — Percentage of queries resolved without human intervention
+3. Pending Approval Bottleneck Counter — Real-time badge
+4. Average Response Latency — Target: under 1.5 seconds
+5. Active Conversations — Live count
+6. Leads Generated Today — Count
+12.4 Export & Report Generation Engine
+• One-Click Export — PDF and CSV formats
+• Daily Summary — Full data for the day
+• Weekly Report — Seven days of data
+• Monthly Report — Thirty days of data
+• Scheduled Reports — Automatic email (future)
+12.5 Real-Time Dashboard Updates
+• Socket.io — Updates without page refresh
+• Live counters — Increment on every message
+• Auto-refresh — Charts update every five seconds
+• Notifications — Alert on new message
+13. CONVERSATION ASSIGNMENT & AGENT MANAGEMENT
+This module distributes conversations among agents.
+13.1 Agent Roles
+• Admin — Can view all conversations
+• Supervisor — Team conversations
+• Agent — Only assigned conversations
+• Viewer — Read-only access
+13.2 Assignment Methods
+• Manual Assignment — Admin assigns to an agent
+• Auto Assignment — Round-robin or load-based
+• Skill-based — Language or product knowledge
+• Territory-based — Based on region
+13.3 Agent Workload Management
+• Maximum concurrent chats — Five per agent (configurable)
+• Queue system — Conversations waiting for an agent
+• Priority flag — VIP customers get priority
+• Escalation — Complex queries go to a supervisor
+13.4 Agent Status
+• Online — Available for chats
+• Busy — Maximum chats reached
+• Away — On break
+• Offline — Not available
+13.5 Agent Performance Metrics
+• Response time — Average first reply time
+• Resolution time — Time to close a conversation
+• Chats handled — Total chats
+• Customer satisfaction — Rating
+• Messages sent — Total messages
+14. CANNED RESPONSES & QUICK REPLIES
+This module provides predefined replies.
+14.1 Canned Responses
+• Predefined templates — For common queries
+• Shortcut codes — /pricing, /hours, /location
+• Variable support — {customer_name}, {business_name}
+• Category-wise — Pricing, Support, Sales, FAQ
+• Multi-language — English, Hindi, Hinglish
+• Search — Type to search
+• Usage tracking — Which template was used how often
+14.2 Quick Replies in Dashboard
+• Slash commands — Type / to see the list
+• Keyboard shortcuts — Ctrl+1, Ctrl+2
+• Recent replies — Recently used
+• Favorites — Starred responses
+14.3 Canned Response Examples
+• Pricing: "Our pricing starts from a base rate. Would you like a detailed quote?"
+• Hours: "We are open Monday to Saturday, 10 AM to 7 PM."
+• Location: "We are located at the given address. Here is the map link."
+• Setup: "Here is your setup guide."
+• Support: "Our team will connect with you within twenty-four hours."
+15. MESSAGE SEARCH & FILTER
+This module provides search and filter options in the dashboard.
+15.1 Search Features
+• Global search — Search across all conversations
+• Message content search — Text and keywords
+• Customer search — Name, phone, email
+• Date range — Specific period
+• Platform filter — Only WhatsApp, only Telegram
+• Status filter — Pending, Sent, Failed
+• Tag filter — #HOT_LEAD, #PRICING_INQUIRY
+15.2 Advanced Filters
+• Unread only — Only unread messages
+• Pending approval — Awaiting approval
+• Assigned to me — My conversations
+• Has media — Messages with media
+• Has lead — Lead extracted
+• Language — English, Hindi, Hinglish
+15.3 Sort Options
+• Latest first — Default
+• Oldest first
+• Most messages
+• Longest pending
+• Priority
+15.4 Saved Searches
+• Save filter — For repeated use
+• Share filter — With the team
+• Quick access — In the dashboard sidebar
+16. CONVERSATION NOTES & INTERNAL COMMENTS
+This module provides internal notes.
+16.1 Internal Notes
+• Agent notes — Notes about the customer
+• @mentions — Tag a team member
+• Timeline — Chronological order of notes
+• Attachments — Attach files
+• Visibility — Internal only, customers cannot see them
+16.2 Note Types
+• General note — Any information
+• Follow-up — Reminder
+• Issue — Problem log
+• Resolution — How it was fixed
+• Escalation — Sent to supervisor
+16.3 Collaboration
+• Team mentions — @agent_name
+• Assignment — Assign with the note
+• Notifications — Alert on mention
+• History — Who wrote what and when
+17. BUSINESS HOURS & AWAY MESSAGES
+This module configures working hours.
+17.1 Business Hours Setup
+• Per day hours — Different for each day of the week
+• Multiple shifts — Morning and Evening
+• Holidays — Specific dates
+• Time zone — Auto-detected
+• Special hours — Festivals and sale days
+17.2 Away Message
+• Auto-reply — Outside business hours
+• Custom message — "We are currently offline. We will reply within twenty-four hours."
+• Expected response time — "We will be back at 10 AM"
+• Emergency contact — For urgent matters
+• Multi-language — English, Hindi, Hinglish
+17.3 Business Hours Logic
+1. Message arrives
+2. Business hours are checked
+3. If open, AI or menu flow is triggered
+4. If closed, away message is sent and the message is queued
+5. Next business day, an automatic follow-up is sent
+17.4 Holiday Mode
+• Manual toggle — "We are on holiday"
+• Scheduled — Pre-set dates
+• Custom message — Holiday-specific
+• Auto-resume — Normal operation after the holiday
+18. MESSAGE TEMPLATES (WHATSAPP)
+This module manages pre-approved templates for WhatsApp.
+18.1 WhatsApp Template Requirement
+WhatsApp applies a 24-hour rule:
+• 24-hour window — Free replies allowed for twenty-four hours after the user messages
+• Outside window — A template must be used
+• Template approval — Approval required from Meta
+18.2 Template Categories
+• Marketing — Offers and promotions
+• Utility — Order updates and receipts
+• Authentication — OTP and verification
+• Service — Customer support
+18.3 Template Management
+• Create template — From the dashboard
+• Submit for approval — Send to Meta
+• Status tracking — Pending, Approved, Rejected
+• Version control — Track updates
+• Multi-language — A separate template per language
+18.4 Template Variables
+• {{customer_name}} — Customer's name
+• {{order_id}} — Order ID
+• {{amount}} — Amount
+• {{date}} — Date
+• {{business_name}} — Business name
+18.5 Template Examples
+• Order Confirmation: "Hi {{customer_name}}, your order {{order_id}} is confirmed. Total: {{amount}}."
+• Delivery Update: "Your order {{order_id}} is out for delivery. Expected by {{date}}."
+• Payment Reminder: "Hi {{customer_name}}, your payment of {{amount}} is due."
+19. MESSAGE STATUS & DELIVERY RECEIPTS
+This module tracks message status.
+19.1 Status Types
+• Sent — Message dispatched
+• Delivered — Reached the platform
+• Read — User has read it
+• Failed — An error occurred
+• Pending Approval — Awaiting client approval
+• Rejected — Client rejected it
+19.2 Platform-wise Status
+• Telegram — Sent, Delivered, Read
+• Discord — Sent, Delivered
+• WhatsApp — Sent, Delivered, Read (blue tick)
+• Instagram — Sent, Delivered, Read
+• Website — Sent, Delivered, Read (via socket)
+19.3 Status Webhook Handling
+Each platform sends status webhooks:
+• WhatsApp — /api/webhooks/whatsapp/status
+• Instagram — /api/webhooks/instagram/status
+• Telegram — Polled through the Bot API
+On a status update:
+1. The database is updated
+2. A socket event is sent to the dashboard
+3. The analytics counter is updated
+19.4 Delivery Failure Handling
+• Retry logic — Three attempts
+• Fallback — Send email or SMS
+• Alert — Red badge on the dashboard
+• Log — Save the failure reason
+20. RATE LIMITING & SPAM PREVENTION
+This module prevents spam and abuse.
+20.1 Rate Limiting
+• Per user — Maximum ten messages per minute
+• Per IP — Maximum one hundred requests per minute
+• Per API key — Maximum one thousand requests per minute
+• Per platform — Platform-specific limits
+20.2 Spam Detection
+• Keyword filter — Blocks abusive words
+• Link filter — Blocks suspicious links
+• Pattern detection — Repeated messages
+• Duplicate detection — Ignores the same content
+• Bot detection — Automated behavior
+20.3 Abuse Handling
+• Warning — First time
+• Temporary block — Fifteen minutes
+• Permanent block — Repeated abuse
+• Report — Alerts the admin
+20.4 Content Moderation
+• Profanity filter — Bad words
+• NSFW filter — Adult content
+• Violence filter — Threatening content
+• Custom filter — Business-specific
+21. API INTEGRATION & SYSTEM ARCHITECTURE
+21.1 System Architecture Overview
+Channel Layer
+• Messages arrive from six platforms
+• Received through webhooks or Socket.io
+Ingestion Layer
+• Signature verification
+• Rate limiting
+• Replay attack prevention
+Normalization Layer
+• Conversion to Universal Schema
+• Storage in the database
+Processing Layer
+• Analytics counter increment
+• Menu matcher check
+• AI engine call
+Approval Layer
+• Client approval mode check
+• Auto-send or pending queue
+Output Layer
+• Sent back through the platform API
+• Socket event sent to the dashboard
+21.2 API Endpoints Summary
+Webhook Endpoints
+• /api/webhooks/telegram — POST
+• /api/webhooks/discord — POST
+• /api/webhooks/whatsapp — POST
+• /api/webhooks/instagram — POST
+• /api/webhooks/linkedin — POST
+Dashboard Endpoints
+• /api/conversations — GET (list)
+• /api/conversations/{id}/messages — GET (thread)
+• /api/conversations/{id}/takeover — POST (human takeover)
+• /api/conversations/{id}/autopilot — POST (auto on or off)
+Approval Endpoints
+• /api/approvals/pending — GET
+• /api/approvals/{id}/approve — POST
+• /api/approvals/{id}/reject — POST
+• /api/approvals/{id}/edit — POST
+Analytics Endpoints
+• /api/analytics/daily — GET
+• /api/analytics/hourly — GET
+• /api/analytics/export — GET
+• /api/analytics/kpi — GET
+AI Endpoints
+• /api/ai/polish — POST (rephrase draft)
+• /api/ai/generate — POST (manual AI call)
+Lead Endpoints
+• /api/leads/{conversation_id} — GET
+• /api/leads/tags — POST
+21.3 Socket.io Events
+• new_message — A new message arrived
+• analytics_update — Counter update
+• pending_approval — New approval request
+• conversation_update — Conversation changed
+• typing — User typing
+22. DATABASE ARCHITECTURE & SCHEMAS
+The database runs on PostgreSQL (Supabase free tier).
+22.1 Core Tables
+conversations Table
+• id, platform, external_chat_id, sender_name, sender_phone, sender_email, auto_pilot, created_at, updated_at
+• Unique constraint: (platform, external_chat_id)
+messages Table
+• id, conversation_id, platform, sender_type (USER, AGENT, BOT), direction (INBOUND, OUTBOUND), text_content, media_url, status, created_at
+daily_platform_analytics Table
+• id, date, platform, inbound_count, outbound_ai_count, outbound_agent_count, outbound_menu_count, pending_count, created_at
+• Unique constraint: (date, platform)
+hourly_analytics Table
+• id, date, hour, platform, inbound_count, outbound_count
+• Unique constraint: (date, hour, platform)
+pending_approvals Table
+• id, conversation_id, message_id, proposed_text, status, created_at
+leads Table
+• id, conversation_id, full_name, phone_number, email_address, lead_tags, created_at
+users Table (Dashboard)
+• id, email, password_hash, role, status, last_login, created_at
+audit_logs Table
+• id, user_id, action, entity_type, entity_id, old_value, new_value, ip_address, created_at
+22.2 Data Integrity
+• Foreign key constraints
+• Unique constraints
+• Check constraints for positive amounts and valid dates
+• Triggers for auto-updating timestamps
+• Transaction isolation for financial operations
+22.3 Scalability Design
+• Read replicas for analytics
+• Connection pooling (PgBouncer)
+• Partitioning for large tables (messages, analytics)
+• Auto-scaling based on CPU
+23. SECURITY, COMPLIANCE & EXCEPTION HANDLING
+23.1 Security Specifications
+• Data Encryption at Rest — AES-256-GCM
+• Data Encryption in Transit — TLS 1.3
+• Authentication — JWT with strict expiration
+• Webhook Validation — HMAC-SHA256
+• Rate Limiting — One thousand requests per minute per API key
+• Input Validation — SQL injection and XSS prevention
+• CSRF Protection — Token-based
+• File Upload Validation — Type, size, and malware scan
+23.2 Compliance
+• Nepal IT Act 2061 compliance, if deployed in Nepal
+• GDPR-ready — Data export and right to erasure
+• PCI-DSS — Payment card data (future)
+• Data Retention Policy — Auto-deletion after one year
+23.3 Exception & Edge Case Handling Matrix
+Meta Webhook Timeout (over 15 seconds)
+• Risk: High
+• Impact: Meta marks the endpoint unresponsive
+• Mitigation: Immediate HTTP 200 OK and asynchronous processing
+Gemini AI API Downtime
+• Risk: Medium
+• Impact: AI auto-reply fails
+• Mitigation: Send a fallback message
+Expired OAuth Access Token
+• Risk: High
+• Impact: Outbound replies fail with HTTP 401
+• Mitigation: NEEDS_REAUTH flag and dashboard alert
+Unsupported Media Format
+• Risk: Low
+• Impact: Render error
+• Mitigation: Save the media URL and show a download link
+Duplicate Webhook Delivery
+• Risk: Medium
+• Impact: Double counting
+• Mitigation: Unique constraint on message_id
+Database Connection Exhausted
+• Risk: High
+• Impact: All requests fail
+• Mitigation: PgBouncer and retry logic
+User Sends Abusive Content
+• Risk: Medium
+• Impact: Brand reputation
+• Mitigation: Content filter and auto-flag
+AI Generates Wrong Price
+• Risk: High
+• Impact: Business loss
+• Mitigation: Anti-hallucination guardrails and approval mode
+24. BACKUP & RESTORE
+This module handles data backup.
+24.1 Backup Strategy
+• Daily backup — Automatic
+• Weekly full backup — Complete database
+• Monthly archive — Long-term storage
+• Point-in-time recovery — Restore to any time
+24.2 Backup Storage
+• Supabase backup — Daily on the free tier
+• Manual export — CSV or JSON
+• Cloud storage — Google Drive, Dropbox
+• Retention — Thirty days daily, one year monthly
+24.3 Restore Process
+• Full restore — Entire database
+• Partial restore — Specific tables
+• Point-in-time — Specific time
+• Testing — Restore in the test environment
+24.4 Data Export
+• User data — GDPR compliance
+• Conversation export — CSV or JSON
+• Analytics export — PDF or Excel
+• Lead export — CSV
+25. MONITORING, ALERTING & LOGGING
+This module monitors system health.
+25.1 Uptime Monitoring
+• UptimeRobot — Free, up to fifty monitors
+• Check interval — Five minutes
+• Alert — Email or SMS
+• Status page — Public
+25.2 Performance Monitoring
+• Response time — API latency
+• Database queries — Slow queries
+• Memory usage — RAM
+• CPU usage — Processor
+• Error rate — Failed requests
+25.3 Error Tracking
+• Sentry — Free tier, five thousand events per month
+• Error grouping — Similar errors grouped
+• Stack trace — Debug information
+• User context — Who was affected
+25.4 Alerting
+• Email alerts — Critical errors
+• Slack integration — Team notifications
+• Dashboard alerts — Visual badges
+• Escalation — Auto-escalate
+25.5 Health Check Endpoint
+• /api/health — System status
+• Database connectivity
+• AI service status
+• Platform API status
+• Socket.io status
+25.6 Logging
+Log Types
+• Application logs — Code execution
+• Access logs — API requests
+• Error logs — Exceptions
+• Audit logs — User actions
+• Security logs — Suspicious activity
+Log Levels
+• DEBUG — Detailed information
+• INFO — General information
+• WARNING — Potential issue
+• ERROR — Error
+• CRITICAL — Severe
+Log Storage
+• Render logs — Free, seven days
+• File logs — Local storage
+• External — Logtail or Papertrail (free tier)
+• Retention — Thirty days
+26. CI/CD PIPELINE
+This module handles automatic deployment.
+26.1 GitHub Actions
+• Free tier — Two thousand minutes per month
+• Auto test — On every push
+• Auto deploy — On the main branch
+• Rollback — On failure
+26.2 Pipeline Stages
+1. Lint — Code quality
+2. Test — Unit and integration
+3. Build — Docker image
+4. Deploy — Render or Vercel
+5. Smoke test — Basic checks
+26.3 Environments
+• Development — Local
+• Staging — Test environment
+• Production — Live
+26.4 Deployment Strategy
+• Blue-green — Zero downtime
+• Canary — Gradual rollout
+• Rollback — Instant revert
+27. TESTING, QA & ACCEPTANCE CRITERIA
+27.1 Testing Types
+• Unit tests — Individual functions
+• Integration tests — Module interactions
+• End-to-end tests — Full user journey
+• Load tests — Performance
+• Security tests — Vulnerabilities
+27.2 Testing Tools
+• pytest — Python testing
+• Jest — React testing
+• Playwright — End-to-end
+• Locust — Load testing
+• OWASP ZAP — Security
+27.3 Test Coverage
+• Target — Eighty percent coverage
+• Critical paths — One hundred percent
+• Report — Coverage report
+27.4 Test Automation
+• Pre-commit hooks — Run tests
+• CI pipeline — Auto test
+• Nightly tests — Full suite
+27.5 Acceptance Criteria
+Test Scenario 1: Message Normalization and Metric Increment
+• GIVEN an incoming payload
+• WHEN the webhook receives it
+• THEN it is parsed within 200 milliseconds, saved, and the counter is incremented
+Test Scenario 2: Manual Approval Queue Hold
+• GIVEN approval mode is OFF
+• WHEN the AI generates a response
+• THEN the status is PENDING_APPROVAL and the message is held without dispatch
+Test Scenario 3: AI Polish Tool
+• GIVEN a rough draft
+• WHEN [Polish] is clicked
+• THEN the professional text replaces the draft
+Test Scenario 4: Real-Time Analytics Chart
+• GIVEN active messaging
+• WHEN the Analytics tab is opened
+• THEN the Bar and Donut charts render accurate data
+Test Scenario 5: Daily Analytics Counter
+• GIVEN ten inbound and eight outbound messages
+• WHEN the API is queried
+• THEN the counts match
+Test Scenario 6: Language Match
+• GIVEN a Hinglish query
+• WHEN the AI replies
+• THEN the reply is in Hinglish
+Test Scenario 7: Auto-Pilot Takeover
+• GIVEN auto-pilot is OFF
+• WHEN a user sends a message
+• THEN no auto-reply is sent and the agent handles it
+28. DOCUMENTATION
+This module covers project documentation.
+28.1 API Documentation
+• Swagger or OpenAPI — Auto-generated
+• Postman collection — Import ready
+• cURL examples — Copy-paste ready
+• Authentication guide — Step-by-step
+28.2 User Guide
+• Getting started — Setup guide
+• Dashboard tour — Feature overview
+• FAQ — Common questions
+• Video tutorials — Screen recordings
+28.3 Developer Guide
+• Architecture — System design
+• Code structure — Folder explanation
+• Contributing — How to contribute
+• Deployment — Deploy guide
+28.4 Documentation Tools
+• MkDocs — Static site
+• Docusaurus — React-based
+• GitHub Wiki — Simple
+• Notion — Collaborative
+29. DEVELOPER ONBOARDING & HANDOVER PLAYBOOK
+29.1 Coding Standards
+• Modular code — A separate file per platform
+• No modification of existing handlers
+• Universal Schema must be followed
+• Analytics counter triggered on every webhook
+• AI prompts only in ai_service
+• Socket events centralized
+29.2 Folder Structure
+• app/api/webhooks/ — Platform webhooks
+• app/api/dashboard/ — Dashboard APIs
+• app/services/ — Business logic
+• app/models/ — Database models
+• app/schemas/ — Pydantic schemas
+• app/utils/ — Helpers
+29.3 Environment Variables
+• Database URL
+• Gemini API Key
+• Telegram Bot Token
+• Discord Bot Token
+• Meta App Secret
+• JWT Secret
+• Socket.io CORS origins
+29.4 Deployment Guide
+• Backend — Render.com (free tier)
+• Frontend — Vercel (free)
+• Database — Supabase (free)
+• Local Tunnel — Ngrok (free)
+• File Storage — Supabase Storage (free)
+30. CLIENT ONBOARDING FLOW
+This module handles new client setup.
+30.1 Onboarding Steps
+1. Sign up — Email and password
+2. Email verify — Verification link
+3. Business info — Name, industry, hours
+4. Channel connect — Telegram, Discord, and so on
+5. AI setup — Knowledge base upload
+6. Menu setup — Configure buttons
+7. Team invite — Add agents
+8. Go live — Start receiving
+30.2 Onboarding Wizard
+• Step-by-step — Guided setup
+• Progress bar — Completion status
+• Skip option — Can be done later
+• Help tooltips — On every step
+• Video guide — Screen recording
+30.3 Knowledge Base Setup
+• Text input — Business information
+• File upload — PDF, DOCX
+• URL scraping — From the website
+• FAQ builder — Common questions and answers
+• Multi-language — English, Hindi, Hinglish
+30.4 Channel Connection
+• Telegram — Paste the bot token
+• Discord — Invite the bot
+• WhatsApp — Connect the Meta app
+• Instagram — Connect the Meta app
+• Website — Embed code
+30.5 Testing Before Go-Live
+• Test message — Send one
+• AI reply check — Response quality
+• Menu test — Buttons work
+• Approval test — Toggle check
+• Analytics test — Counter update
+31. CHANNEL-WISE API SETUP GUIDE
+31.1 Telegram (Free, Easy)
+• Where to get it — @BotFather on Telegram
+• What you get — Bot Token
+• Steps — /newbot, then name, then token
+• Webhook — setWebhook URL
+• Cost — One hundred percent free
+31.2 Discord (Free)
+• Where to get it — discord.com/developers
+• What you get — Bot Token and App ID
+• Steps — New App, then Bot, then Token
+• Invite — OAuth2 URL
+• Cost — One hundred percent free
+31.3 Website Chat (Self-Built)
+• Where to get it — Nothing required
+• Tech — Socket.io and React widget
+• Steps — Backend socket server plus frontend widget
+• Cost — One hundred percent free
+31.4 WhatsApp (Meta)
+• Where to get it — developers.facebook.com
+• What you need — Meta Developer Account
+• Free Tier — One thousand conversations per month
+• Trial — Test number with up to five verified numbers
+• Webhook — /api/webhooks/whatsapp
+31.5 Instagram (Meta)
+• Where to get it — Same Meta Developer App
+• What you need — Instagram Business Account
+• Free Tier — Limited
+• Trial — Sandbox or mock data
+31.6 LinkedIn (Skipped in Trial)
+• Where to get it — developer.linkedin.com
+• Problem — Partner Program approval required
+• Trial — Skip
+• Future — Sales Navigator or Partner Program
+31.7 Gemini AI (Free Tier)
+• Where to get it — aistudio.google.com
+• What you get — Free API Key
+• Free Tier — Fifteen requests per minute, one million tokens per day
+• Cost — Free for trial
+32. BILLING & SUBSCRIPTION (FUTURE SCOPE)
+This module is for future monetization.
+32.1 Subscription Plans
+• Basic — One channel, one thousand messages per month
+• Standard — Three channels, ten thousand messages per month
+• Premium — All channels, unlimited
+32.2 Pricing
+• Monthly — Base rate per month
+• Quarterly — Ten percent discount
+• Yearly — Twenty percent discount
+• Custom — Enterprise
+32.3 Payment Gateway
+• Razorpay — India
+• Stripe — International
+• Fonepay — Nepal
+• UPI — India
+32.4 Billing Features
+• Auto-renewal — Recurring
+• Invoice — PDF download
+• Payment history — All transactions
+• Upgrade or downgrade — Prorated
+• Grace period — Seven days
+• Suspension — On non-payment
+32.5 Usage Tracking
+• Message count — Monthly
+• Channel count — Active
+• Storage usage — Files
+• API calls — Rate limit
+• Overage charges — Extra usage
+33. TRIAL TIMELINE & MILESTONES
+33.1 Eighteen-Day Phased Delivery
+Phase 1: Setup (Day 1-2)
+• FastAPI project initialization
+• Supabase database setup
+• Ngrok installation
+• Project structure
+Phase 2: Core and Telegram (Day 3-4)
+• Webhook receiver
+• Data normalizer
+• Telegram bot integration
+Phase 3: Discord and Website (Day 5-6)
+• Discord bot
+• Socket.io chat widget
+Phase 4: AI and Menu (Day 7-9)
+• Gemini integration
+• Interactive buttons
+• Rich media dispatch
+Phase 5: Dashboard (Day 10-12)
+• React three-panel UI
+• Approval queue
+• Real-time updates
+Phase 6: Analytics (Day 13-14)
+• Daily and hourly tables
+• Recharts graphs
+• KPI scorecards
+Phase 7: WhatsApp and Instagram (Day 15-16)
+• Meta test number
+• Graph API integration
+Phase 8: Polish and Demo (Day 17-18)
+• Testing
+• Bug fixes
+• Demo preparation
+33.2 Milestone Deliverables
+• Day 4 — Telegram live
+• Day 6 — Discord and Website live
+• Day 9 — AI and Menu working
+• Day 12 — Dashboard functional
+• Day 14 — Analytics complete
+• Day 16 — WhatsApp and Instagram sandbox
+• Day 18 — Final demo
+34. SUCCESS METRICS & KPIs
+34.1 Business Metrics
+• Five or more channels live in trial
+• Ninety percent or higher language match accuracy
+• Client approval within five seconds
+• Dashboard update within two seconds
+• Zero infrastructure cost
+34.2 Technical Metrics
+• Sub-1.5 second auto-reply latency
+• One hundred percent webhook signature validation
+• Under 200 millisecond normalization time
+• Real-time dashboard with no refresh
+• Zero-downtime analytics
+34.3 Trial Success Criteria
+• Telegram, Discord, and Website live demo
+• AI reply in English, Hindi, and Hinglish
+• Interactive buttons working
+• PDF and image delivery
+• Approval workflow demo
+• Analytics dashboard with four graphs
+• Client sign-off for the production phase
+35. RISKS & MITIGATION
+35.1 Technical Risks
+• Meta API approval delay — Use a test number during trial
+• Gemini rate limit — Queue and retry
+• Ngrok URL change — Fixed domain (paid) or re-setup
+• Database connection limit — PgBouncer
+• Socket.io scaling — Redis adapter (future)
+35.2 Business Risks
+• Client expectation mismatch — Clear trial versus production scope
+• LinkedIn unavailability — Skip during trial and document
+• WhatsApp policy change — Monitor Meta updates
+• AI hallucination — Strict guardrails and approval mode
+35.3 Mitigation Strategy
+• Early client demo on Day 6
+• Weekly progress updates
+• Fallback for every external dependency
+• Documentation for every module
+• Testing at every phase
+36. FUTURE SCOPE (PRODUCTION PHASE)
+36.1 Phase 2 Features
+• All six channels live with verified accounts
+• LinkedIn Partner Program integration
+• Predictive analytics with ML
+• Advanced CRM with lead scoring
+• Multi-tenant support for multiple businesses
+• Mobile app (React Native)
+• Voice message transcription
+• Sentiment analysis
+• Auto-translation into more languages
+36.2 Scalability Roadmap
+• AWS RDS PostgreSQL with read replicas
+• Redis for caching and rate limiting
+• Kubernetes for orchestration
+• CDN for media delivery
+• Elasticsearch for full-text search
+• ML models for forecasting
+36.3 Monetization (Future)
+• Subscription plans (Basic, Standard, Premium)
+• Per-message pricing
+• API access for third parties
+• White-label solution
+37. APPENDIX
+37.1 Glossary
+• PRD — Product Requirement Document
+• Webhook — HTTP callback for events
+• Socket.io — Real-time bidirectional communication
+• JWT — JSON Web Token
+• HMAC — Hash-based Message Authentication Code
+• KPI — Key Performance Indicator
+• RBAC — Role-Based Access Control
+• CRUD — Create, Read, Update, Delete
+• SLA — Service Level Agreement
+37.2 References
+• Telegram Bot API Documentation
+• Discord Developer Documentation
+• Meta Graph API Documentation
+• Gemini API Documentation
+• FastAPI Documentation
+• React Documentation
+• Recharts Documentation
+37.3 Change Log
+• v1.0.0 — Initial trial PRD
+• v1.1.0 — Analytics module added (future)
+• v2.0.0 — Production phase (future)
+END OF PRD
+OmniHub Trial Phase — Multiplatform Messaging & Automation Hub
+This document contains the complete A-to-Z specification: from authentication to analytics, every module, every feature, every edge case, every API, and every security detail — all written in tier-2 English without any Hinglish words, and fully aligned with a zero-cost, free-tier stack.

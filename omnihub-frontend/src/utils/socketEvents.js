@@ -1,0 +1,26 @@
+export const SOCKET_EVENTS = {
+  CONNECT: 'connect',
+  DISCONNECT: 'disconnect',
+  AUTHENTICATE: 'authenticate',
+  AUTHENTICATED: 'authenticated',
+  UNAUTHORIZED: 'unauthorized',
+  JOIN_ROOM: 'join_room',
+  LEAVE_ROOM: 'leave_room',
+  NEW_MESSAGE: 'new_message',
+  MESSAGE_SENT: 'message_sent',
+  MESSAGE_DELIVERED: 'message_delivered',
+  MESSAGE_READ: 'message_read',
+  MESSAGE_FAILED: 'message_failed',
+  TYPING_START: 'typing_start',
+  TYPING_STOP: 'typing_stop',
+  AUTO_PILOT_UPDATED: 'auto_pilot_updated',
+  APPROVAL_MODE_UPDATED: 'approval_mode_updated',
+  DRAFT_CREATED: 'draft_created',
+  DRAFT_APPROVED: 'draft_approved',
+  DRAFT_REJECTED: 'draft_rejected',
+  AGENT_ASSIGNED: 'agent_assigned',
+  LEAD_UPDATED: 'lead_updated',
+  ANALYTICS_UPDATE: 'analytics_update',
+};
+
+export default SOCKET_EVENTS;

@@ -1,0 +1,987 @@
+Complete Tech Stack — OmniHub (MERN-Based)
+Multiplatform Messaging & Automation Hub
+📊 Tech Stack Overview (One-Page View)
+Layer
+Technology
+Language
+Purpose
+Frontend
+React.js + Vite
+JavaScript (JSX)
+Dashboard UI
+Styling
+Tailwind CSS
+CSS
+UI styling
+Charts
+Recharts
+JavaScript
+Analytics graphs
+State Management
+Redux Toolkit / Zustand
+JavaScript
+Global state
+Real-time Client
+Socket.io Client
+JavaScript
+Live updates
+Backend
+Node.js + Express
+JavaScript
+API server
+Real-time Server
+Socket.io
+JavaScript
+WebSocket server
+Database
+MongoDB Atlas
+BSON/JSON
+Data storage
+ODM
+Mongoose
+JavaScript
+MongoDB modeling
+AI Engine
+Google Gemini API
+REST/SDK
+Auto-replies
+Auth
+JWT + bcrypt
+JavaScript
+Authentication
+File Storage
+Cloudinary / Supabase Storage
+REST API
+Media files
+Email
+Nodemailer
+JavaScript
+OTP, notifications
+Caching
+Redis (Upstash)
+Key-Value
+Rate limiting, sessions
+Queue
+BullMQ
+JavaScript
+Background jobs
+Hosting (Backend)
+Render / Railway
+—
+Node.js deploy
+Hosting (Frontend)
+Vercel
+—
+React deploy
+Hosting (DB)
+MongoDB Atlas
+—
+Free 512MB cluster
+Tunnel
+Ngrok
+—
+Local webhook testing
+---
+1. FRONTEND TECH STACK
+1.1 Core Framework
+Tool
+Version
+Purpose
+Why This?
+React.js
+18.x
+UI library
+Component-based, huge ecosystem
+Vite
+5.x
+Build tool
+Faster than CRA, HMR support
+React Router DOM
+6.x
+Routing
+Client-side navigation
+Axios
+1.x
+HTTP client
+API calls to backend
+Language: JavaScript (ES6+) with JSX syntax
+1.2 Styling
+Tool
+Purpose
+Why This?
+Tailwind CSS
+Utility-first CSS
+Rapid UI, no custom CSS files
+Headless UI
+Unstyled components
+Accessible dropdowns, modals
+Lucide React
+Icon library
+Modern, lightweight icons
+Framer Motion
+Animations
+Smooth transitions
+Language: CSS (via Tailwind classes)
+1.3 State Management
+Tool
+Purpose
+When to Use
+Redux Toolkit
+Global state
+Auth, conversations, analytics
+Zustand
+Lightweight state
+Alternative to Redux (simpler)
+React Query (TanStack)
+Server state
+API caching, auto-refetch
+Context API
+Local state
+Theme, socket connection
+Recommendation: Redux Toolkit + React Query for production-grade
+1.4 Charts & Analytics
+Tool
+Purpose
+Chart Types
+Recharts
+Data visualization
+Bar, Donut, Line, Stacked
+Chart.js
+Alternative
+Simpler API
+D3.js
+Custom charts
+Advanced visualizations
+Recommendation: Recharts (matches PRD Module 12)
+1.5 Real-Time
+Tool
+Purpose
+Socket.io Client
+Live messages, analytics updates
+React Socket Context
+Centralized socket handling
+1.6 Forms & Validation
+Tool
+Purpose
+React Hook Form
+Form handling
+Zod
+Schema validation
+Yup
+Alternative validation
+1.7 UI Components Library
+Tool
+Purpose
+shadcn/ui
+Pre-built components (buttons, modals)
+Radix UI
+Accessible primitives
+Ant Design
+Full component library (alternative)
+---
+2. BACKEND TECH STACK
+2.1 Core Framework
+Tool
+Version
+Purpose
+Node.js
+20.x LTS
+Runtime environment
+Express.js
+4.x
+Web framework
+Nodemon
+3.x
+Dev auto-restart
+PM2
+5.x
+Production process manager
+Language: JavaScript (Node.js) — or TypeScript for type safety
+2.2 Database
+Tool
+Purpose
+Why This?
+MongoDB Atlas
+Primary database
+Free 512MB, JSON-native
+Mongoose
+ODM (Object Data Modeling)
+Schema validation, relations
+Redis (Upstash)
+Caching + rate limiting
+Free tier, fast
+MongoDB Compass
+GUI client
+Visual DB management
+Note: PRD mentions PostgreSQL. Since you're using MERN, MongoDB replaces PostgreSQL — I've mapped all schemas below.
+2.3 Authentication & Security
+Tool
+Purpose
+jsonwebtoken (JWT)
+Access + refresh tokens
+bcryptjs
+Password hashing
+helmet
+HTTP security headers
+cors
+Cross-origin resource sharing
+express-rate-limit
+Rate limiting per IP/user
+express-validator
+Input validation
+csurf
+CSRF protection
+crypto
+HMAC-SHA256 signature verification
+2.4 Real-Time
+Tool
+Purpose
+Socket.io
+WebSocket server
+socket.io-redis-adapter
+Multi-instance scaling (future)
+2.5 AI Integration
+Tool
+Purpose
+@google/generative-ai
+Gemini SDK (official)
+axios
+HTTP client for AI calls
+langchain (optional)
+Advanced prompt management
+Model: Gemini 1.5 Flash (free tier — 15 req/min, 1M tokens/day)
+2.6 Message Queue & Jobs
+Tool
+Purpose
+BullMQ
+Background job queue
+Redis
+Queue backend
+node-cron
+Scheduled tasks (daily reports)
+2.7 File Handling
+Tool
+Purpose
+Multer
+File upload middleware
+Cloudinary
+Cloud file storage (free 25GB)
+Supabase Storage
+Alternative (free 1GB)
+sharp
+Image optimization
+2.8 Email & Notifications
+Tool
+Purpose
+Nodemailer
+Email sending (OTP, alerts)
+SendGrid
+Email API (free 100/day)
+Gmail SMTP
+Free alternative
+Twilio
+SMS OTP (optional)
+2.9 PDF & CSV Export
+Tool
+Purpose
+PDFKit
+PDF generation (server-side)
+json2csv
+CSV export
+exceljs
+Excel generation
+2.10 Logging & Monitoring
+Tool
+Purpose
+Winston
+Structured logging
+Morgan
+HTTP request logging
+Sentry
+Error tracking (free 5K/month)
+UptimeRobot
+Uptime monitoring (free)
+2.11 Testing
+Tool
+Purpose
+Jest
+Unit testing
+Supertest
+API testing
+Vitest
+Fast alternative
+Playwright
+E2E testing
+---
+3. DATABASE SCHEMA MAPPING (PostgreSQL → MongoDB)
+Since PRD was PostgreSQL and you're using MongoDB, here's the mapping:
+3.1 Collections (Tables → Collections)
+PostgreSQL Table
+MongoDB Collection
+Mongoose Model
+`conversations`
+`conversations`
+Conversation
+`messages`
+`messages`
+Message
+`daily_platform_analytics`
+`dailyanalytics`
+DailyAnalytics
+`hourly_analytics`
+`hourlyanalytics`
+HourlyAnalytics
+`pending_approvals`
+`pendingapprovals`
+PendingApproval
+`leads`
+`leads`
+Lead
+`users`
+`users`
+User
+`audit_logs`
+`auditlogs`
+AuditLog
+`canned_responses`
+`cannedresponses`
+CannedResponse
+`templates`
+`templates`
+Template
+`agent_notes`
+`agentnotes`
+AgentNote
+`business_hours`
+`businesshours`
+BusinessHours
+3.2 Relationships in MongoDB
+PostgreSQL Foreign Keys → MongoDB ObjectId references + Mongoose `populate()`
+Unique Constraints → Mongoose `unique: true` in schema
+Check Constraints → Mongoose custom validators
+Triggers → Mongoose middleware (`pre('save')`, `post('save')`)
+Example:
+// PostgreSQL: conversation_id FOREIGN KEY// MongoDB:conversation_id: {type: mongoose.Schema.Types.ObjectId,ref: 'Conversation',required: true}
+---
+4. MODULE-WISE TECH MAPPING
+Har PRD module ke liye kaunsi technology use hogi:
+PRD Module
+Frontend
+Backend
+Database
+External
+5. Auth & Onboarding
+React + RHF
+Express + JWT + bcrypt
+`users`
+Nodemailer (OTP)
+6. Universal Ingestion
+—
+Express webhooks
+`conversations`, `messages`
+Telegram/Discord/Meta APIs
+7. Interactive Menu
+React (preview)
+Express + menu service
+`messages`
+Platform APIs
+8. Multi-Lingual AI
+—
+Express + Gemini SDK
+`messages`
+Gemini 1.5 Flash
+9. Client Dashboard
+React + Tailwind + Redux
+Express REST APIs
+`conversations`, `messages`
+Socket.io
+10. Lead Extraction
+React sidebar
+Express regex service
+`leads`
+—
+11. Website Widget
+React (embedded)
+Express + Socket.io
+`conversations`
+Socket.io
+12. Analytics
+Recharts + React Query
+Express + Aggregation
+`dailyanalytics`, `hourlyanalytics`
+—
+13. Agent Management
+React + Redux
+Express RBAC
+`users`, `conversations`
+—
+14. Canned Responses
+React + RHF
+Express CRUD
+`cannedresponses`
+—
+15. Search & Filter
+React + React Query
+Express + MongoDB text index
+`messages`
+—
+16. Notes
+React
+Express CRUD
+`agentnotes`
+—
+17. Business Hours
+React form
+Express + node-cron
+`businesshours`
+—
+18. WhatsApp Templates
+React
+Express + Meta API
+`templates`
+Meta Business API
+19. Message Status
+React badges
+Express webhooks
+`messages`
+Platform status webhooks
+20. Rate Limiting
+—
+express-rate-limit + Redis
+—
+Upstash Redis
+21. API Integration
+Axios
+Express routers
+—
+—
+22. Database
+—
+Mongoose
+MongoDB Atlas
+—
+23. Security
+Helmet (frontend headers)
+Helmet + JWT + HMAC
+—
+—
+24. Backup
+—
+mongodump / Atlas backup
+MongoDB Atlas
+Cloud storage
+25. Monitoring
+—
+Winston + Morgan
+—
+Sentry + UptimeRobot
+26. CI/CD
+—
+GitHub Actions
+—
+Render + Vercel
+27. Testing
+Jest + Playwright
+Jest + Supertest
+—
+—
+28. Documentation
+—
+Swagger / Postman
+—
+—
+31. Channel APIs
+—
+Express webhooks
+—
+Telegram, Discord, Meta
+---
+5. LANGUAGE-WISE BREAKDOWN
+Language
+Where Used
+Purpose
+JavaScript (ES6+)
+Frontend + Backend
+Main language (MERN)
+JSX
+React components
+UI markup
+TypeScript (optional)
+Frontend + Backend
+Type safety (recommended)
+CSS (Tailwind)
+Frontend
+Styling
+HTML
+Frontend
+Widget embed code
+JSON
+API requests/responses
+Data format
+BSON
+MongoDB
+Binary JSON storage
+Bash / Shell
+DevOps
+Deployment scripts
+YAML
+CI/CD
+GitHub Actions config
+Markdown
+Documentation
+README, API docs
+Note: Python not needed if using MERN. PRD mentioned FastAPI, but we're replacing with Node.js/Express.
+---
+6. AI MODEL & PROMPT STACK
+6.1 AI Model
+Model
+Provider
+Free Tier
+Use Case
+Gemini 1.5 Flash
+Google
+15 req/min, 1M tokens/day
+Primary auto-reply
+Gemini 1.5 Pro
+Google
+Limited
+Complex queries (future)
+GPT-4o mini
+OpenAI
+Paid
+Alternative
+Claude Haiku
+Anthropic
+Paid
+Alternative
+Recommendation: Gemini 1.5 Flash (free, fast, multi-lingual)
+6.2 Prompt Engineering Layer
+Tool
+Purpose
+System prompts
+Business context, rules
+Few-shot examples
+Language matching
+Output parsers
+Response trimming (3 sentences)
+Guardrails
+Anti-hallucination
+LangChain (optional)
+Prompt chaining
+6.3 Language Detection
+Tool
+Purpose
+franc (npm)
+Language detection
+langdetect
+Alternative
+Custom regex
+Hinglish detection
+---
+7. DEVOPS & INFRASTRUCTURE
+7.1 Hosting
+Component
+Platform
+Free Tier
+Frontend
+Vercel
+100GB bandwidth
+Backend
+Render
+750 hrs/month
+Backend (alt)
+Railway
+$5 credit/month
+Backend (alt)
+Fly.io
+3 VMs free
+Database
+MongoDB Atlas
+512MB
+Redis
+Upstash
+10K commands/day
+File Storage
+Cloudinary
+25GB
+File Storage (alt)
+Supabase Storage
+1GB
+7.2 CI/CD
+Tool
+Purpose
+GitHub Actions
+2000 min/month free
+GitHub Container Registry
+Docker images
+Docker
+Containerization
+Docker Compose
+Local dev
+7.3 Monitoring
+Tool
+Purpose
+Sentry
+Error tracking
+UptimeRobot
+Uptime monitoring
+Logtail
+Log aggregation
+Papertrail
+Alternative logs
+Render Logs
+Built-in logs
+7.4 Local Development
+Tool
+Purpose
+Ngrok
+Expose localhost for webhooks
+MongoDB Compass
+DB GUI
+Postman
+API testing
+Thunder Client
+VS Code API testing
+nodemon
+Auto-restart
+---
+8. COMPLETE PACKAGE.JSON (Backend)
+{"name": "omnihub-backend","version": "1.0.0","type": "module","scripts": {"dev": "nodemon src/server.js","start": "node src/server.js","test": "jest","lint": "eslint src/"},"dependencies": {"express": "^4.19.2","mongoose": "^8.4.0","socket.io": "^4.7.5","jsonwebtoken": "^9.0.2","bcryptjs": "^2.4.3","dotenv": "^16.4.5","cors": "^2.8.5","helmet": "^7.1.0","express-rate-limit": "^7.3.0","express-validator": "^7.1.0","morgan": "^1.10.0","winston": "^3.13.0","@google/generative-ai": "^0.14.0","axios": "^1.7.2","bullmq": "^5.8.0","ioredis": "^5.4.1","multer": "^1.4.5-lts.1","cloudinary": "^2.2.0","nodemailer": "^6.9.13","pdfkit": "^0.15.0","json2csv": "^6.0.0-alpha.2","exceljs": "^4.4.0","node-cron": "^3.0.3","@sentry/node": "^8.9.2","franc": "^6.2.0","helmet": "^7.1.0","cookie-parser": "^1.4.6"},"devDependencies": {"nodemon": "^3.1.0","jest": "^29.7.0","supertest": "^7.0.0","eslint": "^9.4.0"}}
+---
+9. COMPLETE PACKAGE.JSON (Frontend)
+{"name": "omnihub-frontend","version": "1.0.0","type": "module","scripts": {"dev": "vite","build": "vite build","preview": "vite preview","lint": "eslint src/"},"dependencies": {"react": "^18.3.1","react-dom": "^18.3.1","react-router-dom": "^6.23.1","axios": "^1.7.2","redux": "^5.0.1","react-redux": "^9.1.2","@reduxjs/toolkit": "^2.2.5","@tanstack/react-query": "^5.40.0","socket.io-client": "^4.7.5","recharts": "^2.12.7","react-hook-form": "^7.51.5","zod": "^3.23.8","@hookform/resolvers": "^3.6.0","tailwindcss": "^3.4.4","lucide-react": "^0.395.0","framer-motion": "^11.2.10","@headlessui/react": "^2.1.1","clsx": "^2.1.1","date-fns": "^3.6.0","react-hot-toast": "^2.4.1","jspdf": "^2.5.1","papaparse": "^5.4.1"},"devDependencies": {"vite": "^5.2.13","@vitejs/plugin-react": "^4.3.1","eslint": "^9.4.0","autoprefixer": "^10.4.19","postcss": "^8.4.38"}}
+---
+10. FOLDER STRUCTURE
+10.1 Backend
+omnihub-backend/├── src/│   ├── server.js│   ├── app.js│   ├── config/│   │   ├── db.js│   │   ├── redis.js│   │   └── cloudinary.js│   ├── models/│   │   ├── Conversation.js│   │   ├── Message.js│   │   ├── DailyAnalytics.js│   │   ├── HourlyAnalytics.js│   │   ├── PendingApproval.js│   │   ├── Lead.js│   │   ├── User.js│   │   ├── AuditLog.js│   │   ├── CannedResponse.js│   │   ├── Template.js│   │   ├── AgentNote.js│   │   └── BusinessHours.js│   ├── routes/│   │   ├── webhooks/│   │   │   ├── telegram.js│   │   │   ├── discord.js│   │   │   ├── whatsapp.js│   │   │   ├── instagram.js│   │   │   └── linkedin.js│   │   ├── dashboard/│   │   │   ├── conversations.js│   │   │   ├── messages.js│   │   │   ├── approvals.js│   │   │   ├── analytics.js│   │   │   ├── leads.js│   │   │   └── agents.js│   │   ├── ai.js│   │   └── auth.js│   ├── controllers/│   ├── services/│   │   ├── normalizer.js│   │   ├── aiService.js│   │   ├── menuService.js│   │   ├── mediaService.js│   │   ├── analyticsService.js│   │   ├── leadExtractor.js│   │   ├── dispatcher.js│   │   └── emailService.js│   ├── middleware/│   │   ├── auth.js│   │   ├── rateLimiter.js│   │   ├── validateWebhook.js│   │   └── errorHandler.js│   ├── sockets/│   │   └── index.js│   ├── jobs/│   │   ├── dailyReport.js│   │   └── cleanup.js│   └── utils/│       ├── logger.js│       ├── security.js│       └── helpers.js├── tests/├── .env├── package.json└── README.md
+10.2 Frontend
+omnihub-frontend/
+├── public/
+│   ├── favicon.ico
+│   ├── logo.svg
+│   └── widget.js                      ← Embeddable chat widget (Module 11)
+│
+├── src/
+│   ├── main.jsx                       ← Entry point
+│   ├── App.jsx                        ← Root component
+│   │
+│   ├── api/                           ← API Layer
+│   │   ├── axios.js                   ← Axios instance + interceptors
+│   │   ├── authApi.js                 ← Auth endpoints
+│   │   ├── conversationApi.js         ← Conversation endpoints
+│   │   ├── analyticsApi.js            ← Analytics endpoints
+│   │   ├── approvalApi.js             ← Approval endpoints
+│   │   ├── leadApi.js                 ← Lead endpoints
+│   │   └── aiApi.js                   ← AI endpoints
+│   │
+│   ├── store/                         ← Redux Toolkit
+│   │   ├── index.js                   ← Store config
+│   │   ├── authSlice.js               ← Module 5: Auth
+│   │   ├── conversationSlice.js       ← Module 9: Conversations
+│   │   ├── messageSlice.js            ← Module 9: Messages
+│   │   ├── approvalSlice.js           ← Module 9: Approvals
+│   │   ├── analyticsSlice.js          ← Module 12: Analytics
+│   │   ├── leadSlice.js               ← Module 10: Leads
+│   │   ├── agentSlice.js              ← Module 13: Agents
+│   │   ├── cannedResponseSlice.js     ← Module 14: Canned
+│   │   ├── noteSlice.js               ← Module 16: Notes
+│   │   ├── businessHoursSlice.js      ← Module 17: Hours
+│   │   ├── templateSlice.js           ← Module 18: Templates
+│   │   └── sessionSlice.js            ← Module 5.3: Sessions
+│   │
+│   ├── context/                       ← React Context
+│   │   ├── SocketContext.jsx          ← Socket.io provider
+│   │   ├── ThemeContext.jsx           ← Dark/light mode
+│   │   └── NotificationContext.jsx    ← Toast/notifications
+│   │
+│   ├── routes/                        ← Route guards + config
+│   │   ├── AppRoutes.jsx              ← All routes
+│   │   ├── ProtectedRoute.jsx         ← Auth guard
+│   │   ├── PublicRoute.jsx            ← Redirect if logged in
+│   │   └── RoleRoute.jsx              ← Role-based guard (Module 5.4)
+│   │
+│   ├── pages/                         ← Page components
+│   │   ├── auth/                      ← Module 5: Authentication
+│   │   │   ├── Register.jsx
+│   │   │   ├── VerifyEmail.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── VerifyOTP.jsx
+│   │   │   ├── BackupCodes.jsx
+│   │   │   ├── ForgotPassword.jsx
+│   │   │   ├── ResetPassword.jsx
+│   │   │   └── SessionsManager.jsx
+│   │   │
+│   │   ├── dashboard/                 ← Module 9: Dashboard
+│   │   │   ├── Dashboard.jsx          ← Main 3-panel view
+│   │   │   ├── ConversationView.jsx
+│   │   │   └── Approvals.jsx
+│   │   │
+│   │   ├── analytics/                 ← Module 12: Analytics
+│   │   │   ├── Analytics.jsx
+│   │   │   └── Reports.jsx
+│   │   │
+│   │   ├── leads/                     ← Module 10: Leads
+│   │   │   └── LeadsList.jsx
+│   │   │
+│   │   ├── agents/                    ← Module 13: Agents
+│   │   │   ├── AgentsList.jsx
+│   │   │   └── AgentDetail.jsx
+│   │   │
+│   │   ├── settings/                  ← Settings pages
+│   │   │   ├── Profile.jsx
+│   │   │   ├── BusinessHours.jsx      ← Module 17
+│   │   │   ├── CannedResponses.jsx    ← Module 14
+│   │   │   ├── Templates.jsx          ← Module 18
+│   │   │   ├── Channels.jsx           ← Module 31: Channel connect
+│   │   │   ├── Sessions.jsx           ← Module 5.3
+│   │   │   └── Security.jsx           ← Module 5.2: 2FA
+│   │   │
+│   │   ├── onboarding/                ← Module 30: Client setup
+│   │   │   ├── OnboardingWizard.jsx
+│   │   │   ├── KnowledgeBase.jsx
+│   │   │   └── ChannelConnect.jsx
+│   │   │
+│   │   ├── NotFound.jsx
+│   │   └── ServerError.jsx
+│   │
+│   ├── components/                    ← Reusable components
+│   │   ├── common/                    ← Shared UI
+│   │   │   ├── Button.jsx
+│   │   │   ├── Input.jsx
+│   │   │   ├── Modal.jsx
+│   │   │   ├── Dropdown.jsx
+│   │   │   ├── Badge.jsx
+│   │   │   ├── Avatar.jsx
+│   │   │   ├── Spinner.jsx
+│   │   │   ├── Tooltip.jsx
+│   │   │   ├── Pagination.jsx
+│   │   │   ├── EmptyState.jsx
+│   │   │   ├── ErrorBoundary.jsx
+│   │   │   └── ConfirmDialog.jsx
+│   │   │
+│   │   ├── layout/                    ← Layout components
+│   │   │   ├── AuthLayout.jsx         ← Module 5: Auth pages wrapper
+│   │   │   ├── DashboardLayout.jsx    ← Main dashboard wrapper
+│   │   │   ├── Sidebar.jsx
+│   │   │   ├── Topbar.jsx
+│   │   │   └── Footer.jsx
+│   │   │
+│   │   ├── auth/                      ← Module 5: Auth components
+│   │   │   ├── PasswordInput.jsx
+│   │   │   ├── PasswordStrength.jsx
+│   │   │   ├── OTPInput.jsx
+│   │   │   ├── ResendTimer.jsx
+│   │   │   ├── BackupCodeCard.jsx
+│   │   │   ├── SessionCard.jsx
+│   │   │   ├── TwoFASetupCard.jsx
+│   │   │   └── LoginAuditRow.jsx
+│   │   │
+│   │   ├── dashboard/                 ← Module 9: Dashboard
+│   │   │   ├── LeftPanel.jsx          ← Chat list
+│   │   │   ├── CenterPanel.jsx        ← Conversation view
+│   │   │   ├── RightPanel.jsx         ← Lead details
+│   │   │   ├── ChatBubble.jsx
+│   │   │   ├── MessageInput.jsx
+│   │   │   ├── AutoPilotToggle.jsx
+│   │   │   ├── ApprovalCard.jsx
+│   │   │   ├── AI PolishButton.jsx
+│   │   │   └── ChannelBadge.jsx
+│   │   │
+│   │   ├── analytics/                 ← Module 12: Analytics
+│   │   │   ├── KpiCard.jsx
+│   │   │   ├── BarChart.jsx           ← Inbound vs Outbound
+│   │   │   ├── DonutChart.jsx         ← Channel distribution
+│   │   │   ├── LineChart.jsx          ← Hourly traffic
+│   │   │   ├── StackedChart.jsx       ← Response breakdown
+│   │   │   ├── DateRangePicker.jsx
+│   │   │   ├── PlatformTable.jsx
+│   │   │   └── ExportButton.jsx
+│   │   │
+│   │   ├── leads/                     ← Module 10: Leads
+│   │   │   ├── LeadCard.jsx
+│   │   │   ├── LeadTags.jsx
+│   │   │   └── LeadStatusBadge.jsx
+│   │   │
+│   │   ├── agents/                    ← Module 13: Agents
+│   │   │   ├── AgentCard.jsx
+│   │   │   ├── AgentStatusBadge.jsx
+│   │   │   └── AgentPerformance.jsx
+│   │   │
+│   │   ├── settings/                  ← Settings components
+│   │   │   ├── BusinessHoursForm.jsx
+│   │   │   ├── CannedResponseForm.jsx
+│   │   │   ├── TemplateForm.jsx
+│   │   │   └── ChannelConnectCard.jsx
+│   │   │
+│   │   ├── widget/                    ← Module 11: Website widget
+│   │   │   ├── ChatWidget.jsx
+│   │   │   ├── PreChatForm.jsx
+│   │   │   ├── TypingIndicator.jsx
+│   │   │   └── WidgetLauncher.jsx
+│   │   │
+│   │   └── notes/                     ← Module 16: Notes
+│   │       ├── NotesList.jsx
+│   │       ├── NoteCard.jsx
+│   │       └── MentionInput.jsx
+│   │
+│   ├── hooks/                         ← Custom hooks
+│   │   ├── useAuth.js                 ← Module 5
+│   │   ├── useOTPTimer.js             ← Module 5.2
+│   │   ├── useIdleTimer.js            ← Module 5.3
+│   │   ├── usePasswordStrength.js     ← Module 5.1
+│   │   ├── useSessionRefresh.js       ← Module 5.3
+│   │   ├── useSocket.js               ← Socket connection
+│   │   ├── useAnalytics.js            ← Module 12
+│   │   ├── useConversations.js        ← Module 9
+│   │   ├── useApprovals.js            ← Module 9.2
+│   │   ├── useDebounce.js
+│   │   ├── useLocalStorage.js
+│   │   ├── useMediaQuery.js
+│   │   └── useClickOutside.js
+│   │
+│   ├── services/                      ← API service layer
+│   │   ├── authService.js             ← Module 5
+│   │   ├── conversationService.js     ← Module 9
+│   │   ├── analyticsService.js        ← Module 12
+│   │   ├── approvalService.js         ← Module 9.2
+│   │   ├── leadService.js             ← Module 10
+│   │   ├── aiService.js               ← Module 8
+│   │   ├── agentService.js            ← Module 13
+│   │   ├── cannedResponseService.js   ← Module 14
+│   │   ├── noteService.js             ← Module 16
+│   │   ├── businessHoursService.js    ← Module 17
+│   │   ├── templateService.js         ← Module 18
+│   │   ├── sessionService.js          ← Module 5.3
+│   │   └── channelService.js          ← Module 31
+│   │
+│   ├── utils/                         ← Utilities
+│   │   ├── validators.js              ← Email, password regex
+│   │   ├── tokenStorage.js            ← JWT storage
+│   │   ├── deviceInfo.js              ← Browser/device detection
+│   │   ├── formatters.js              ← Date, number formats
+│   │   ├── constants.js               ← App constants
+│   │   ├── permissions.js             ← Role-based permissions
+│   │   ├── chartColors.js             ← Analytics colors
+│   │   ├── exportUtils.js             ← PDF/CSV export
+│   │   └── socketEvents.js            ← Socket event names
+│   │
+│   └── assets/                        ← Static assets
+│       ├── images/
+│       ├── icons/
+│       └── fonts/
+│
+├── .env                               ← Environment variables
+├── .env.example
+├── .eslintrc.js
+├── .prettierrc
+├── .gitignore
+├── index.html
+├── tailwind.config.js
+├── postcss.config.js
+├── vite.config.js
+├── package.json
+└── README.md---
+11. ENVIRONMENT VARIABLES
+Backend `.env`
+# ServerPORT=5000NODE_ENV=development# DatabaseMONGODB_URI=mongodb+srv://...REDIS_URL=redis://...# JWTJWT_SECRET=your_secret_keyJWT_REFRESH_SECRET=your_refresh_secretJWT_EXPIRES=15mJWT_REFRESH_EXPIRES=7d# AIGEMINI_API_KEY=your_gemini_key# PlatformsTELEGRAM_BOT_TOKEN=...DISCORD_BOT_TOKEN=...META_APP_SECRET=...META_VERIFY_TOKEN=...WHATSAPP_PHONE_ID=...INSTAGRAM_ACCOUNT_ID=...# StorageCLOUDINARY_CLOUD_NAME=...CLOUDINARY_API_KEY=...CLOUDINARY_API_SECRET=...# EmailSMTP_HOST=smtp.gmail.comSMTP_PORT=587SMTP_USER=...SMTP_PASS=...# MonitoringSENTRY_DSN=...# Frontend URL (for CORS)CLIENT_URL=http://localhost:5173
+Frontend `.env`
+VITE_API_URL=http://localhost:5000/apiVITE_SOCKET_URL=http://localhost:5000VITE_GEMINI_KEY=...
+---
+12. DEPLOYMENT ARCHITECTURE
+┌─────────────────────────────────────────────────────────────┐│                    USERS / CLIENTS                           ││  (Browser Dashboard, Website Widget, Mobile)                │└──────────────────────┬──────────────────────────────────────┘│ HTTPS▼┌─────────────────────────────────────────────────────────────┐│  FRONTEND (Vercel)                                          ││  React + Vite + Tailwind                                    ││  - Dashboard UI                                             ││  - Analytics Charts                                         ││  - Chat Widget (embedded)                                   │└──────────────────────┬──────────────────────────────────────┘│ REST API + WebSocket▼┌─────────────────────────────────────────────────────────────┐│  BACKEND (Render / Railway)                                 ││  Node.js + Express + Socket.io                              ││  - REST APIs                                                ││  - Webhook receivers                                        ││  - AI integration (Gemini)                                  ││  - Background jobs (BullMQ)                                 │└──────┬──────────────┬──────────────┬────────────────────────┘│              │              │▼              ▼              ▼┌──────────┐  ┌──────────────┐  ┌──────────────┐│ MongoDB  │  │ Redis        │  │ Cloudinary   ││ Atlas    │  │ (Upstash)    │  │ (Media)      ││ (Data)   │  │ (Cache/Queue)│  │              │└──────────┘  └──────────────┘  └──────────────┘│▼┌─────────────────────────────────────────────────────────────┐│  EXTERNAL APIs                                              ││  Telegram | Discord | WhatsApp | Instagram | Gemini AI      │└─────────────────────────────────────────────────────────────┘
+---
+13. COST BREAKDOWN (All Free Tier)
+Service
+Free Tier
+Cost
+Vercel (Frontend)
+100GB bandwidth
+₹0
+Render (Backend)
+750 hrs/month
+₹0
+MongoDB Atlas
+512MB
+₹0
+Upstash Redis
+10K commands/day
+₹0
+Cloudinary
+25GB storage
+₹0
+Gemini API
+15 req/min
+₹0
+GitHub Actions
+2000 min/month
+₹0
+Sentry
+5K events/month
+₹0
+UptimeRobot
+50 monitors
+₹0
+Ngrok
+1 tunnel
+₹0
+TOTAL
+₹0
+---
+14. RECOMMENDED VS CODE EXTENSIONS
+ESLint
+Prettier
+Tailwind CSS IntelliSense
+MongoDB for VS Code
+Thunder Client
+GitLens
+Error Lens
+Auto Rename Tag
+ES7+ React Snippets
+---
+15. FINAL RECOMMENDATION SUMMARY
+Layer
+Choice
+Reason
+Frontend Framework
+React 18 + Vite
+Fast, modern
+Styling
+Tailwind CSS
+Rapid UI
+State
+Redux Toolkit + React Query
+Best combo
+Charts
+Recharts
+Matches PRD
+Backend
+Node.js + Express
+MERN standard
+Database
+MongoDB Atlas
+Free, flexible
+ODM
+Mongoose
+Best MongoDB ORM
+Real-time
+Socket.io
+Industry standard
+AI
+Gemini 1.5 Flash
+Free, fast
+Auth
+JWT + bcrypt
+Standard
+Cache/Queue
+Redis (Upstash) + BullMQ
+Free tier
+Files
+Cloudinary
+Free 25GB
+Email
+Nodemailer + Gmail
+Free
+Hosting
+Vercel + Render
+Both free
+---

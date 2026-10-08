@@ -1,0 +1,20 @@
+import mongoose from 'mongoose';
+import env from './env.js';
+
+export async function connectDB() {
+  try {
+    const conn = await mongoose.connect(env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log(`[Database] MongoDB Connected: ${conn.connection.host}`);
+    return conn;
+  } catch (error) {
+    console.warn(`[Database] Warning: Could not connect to MongoDB at ${env.MONGODB_URI}.`);
+    console.warn(`[Database] Details: ${error.message}`);
+    console.warn('[Database] Backend will operate in fallback/mock state until MongoDB is running.');
+    return null;
+  }
+}
+
+export default connectDB;
+
