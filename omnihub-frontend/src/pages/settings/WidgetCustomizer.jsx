@@ -60,7 +60,7 @@ export default function WidgetCustomizer() {
     try {
       setConfig({
         ...widgetService.getConfig(),
-        businessHours: snapshotBusinessHours(businessHoursService.getSettings()),
+        businessHours: snapshotBusinessHours(businessHoursService.getSettingsSync()),
       });
       setAnalytics(widgetService.getAnalytics());
     } catch (loadError) {
@@ -68,6 +68,16 @@ export default function WidgetCustomizer() {
     } finally {
       setLoading(false);
     }
+
+    Promise.all([widgetService.loadFromBackend(), businessHoursService.getSettings()])
+      .then(([remoteWidget, remoteHours]) => {
+        setConfig({
+          ...remoteWidget,
+          businessHours: snapshotBusinessHours(remoteHours),
+        });
+        setAnalytics(widgetService.getAnalytics());
+      })
+      .catch(() => {});
   }, [canManage]);
 
   const code = useMemo(() => config ? makeEmbedCode(config) : '', [config]);

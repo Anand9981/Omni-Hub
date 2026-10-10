@@ -36,6 +36,26 @@ const businessHoursSchema = new mongoose.Schema(
       type: String,
       default: 'Thanks for reaching out! We are currently closed and will respond as soon as we reopen.',
     },
+    weeklySchedule: {
+      type: Array,
+      default: undefined,
+    },
+    holidays: {
+      type: Array,
+      default: [],
+    },
+    specialHours: {
+      type: Array,
+      default: [],
+    },
+    awayMessage: {
+      type: mongoose.Schema.Types.Mixed,
+      default: undefined,
+    },
+    holidayMode: {
+      type: mongoose.Schema.Types.Mixed,
+      default: undefined,
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

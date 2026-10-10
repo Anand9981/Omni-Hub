@@ -1,3 +1,5 @@
+import api from '../api/axios.js';
+
 const STORAGE_KEY = 'omnihub.demo.cannedResponses';
 const CATEGORIES = ['Pricing', 'Support', 'Sales', 'FAQ'];
 const LANGUAGES = ['English', 'Hindi', 'Hinglish'];
@@ -29,12 +31,36 @@ function readResponses() {
     return parsed;
   } catch (error) {
     console.error('Could not read canned responses.', error);
-    throw new Error('Canned responses could not be loaded. Refresh the page to retry.');
+    return SEED_RESPONSES;
   }
 }
 
 function persist(responses) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
+}
+
+function sortResponses(list) {
+  return [...list].sort((a, b) => (
+    Number(b.favorite) - Number(a.favorite)
+    || (b.usageCount || 0) - (a.usageCount || 0)
+    || String(a.title || '').localeCompare(String(b.title || ''))
+  ));
+}
+
+function mapDoc(doc) {
+  return {
+    ...doc,
+    id: String(doc._id || doc.id),
+    title: doc.title || '',
+    shortcut: doc.shortcut || '',
+    category: CATEGORIES.includes(doc.category) ? doc.category : 'Support',
+    language: LANGUAGES.includes(doc.language) ? doc.language : 'English',
+    content: doc.content || doc.body || '',
+    favorite: Boolean(doc.favorite ?? doc.is_favorite),
+    usageCount: Number(doc.usageCount ?? doc.usage_count ?? 0),
+    createdAt: doc.createdAt || doc.created_at,
+    updatedAt: doc.updatedAt || doc.updated_at,
+  };
 }
 
 function normalizeResponse(input) {
@@ -50,7 +76,7 @@ function normalizeResponse(input) {
   if (!CATEGORIES.includes(category)) throw new Error('Choose a valid category.');
   if (!LANGUAGES.includes(language)) throw new Error('Choose a supported language.');
   if (!content || content.length > 1200) throw new Error('Reply text is required and must be 1,200 characters or fewer.');
-  return { title, shortcut, content, category, language };
+  return { title, shortcut, content, body: content, category, language };
 }
 
 export function expandCannedResponse(content, variables = {}) {
@@ -60,67 +86,127 @@ export function expandCannedResponse(content, variables = {}) {
 }
 
 export const cannedResponseService = {
-  listResponses() {
-    return [...readResponses()].sort((a, b) => (
-      Number(b.favorite) - Number(a.favorite)
-      || b.usageCount - a.usageCount
-      || a.title.localeCompare(b.title)
-    ));
+  async listResponses() {
+    try {
+      const res = await api.get('/dashboard/canned-responses');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const mapped = sortResponses(res.data.data.map(mapDoc));
+        persist(mapped);
+        return mapped;
+      }
+    } catch (err) {
+      console.warn('[cannedResponseService] Backend API fallback:', err.message);
+    }
+    return sortResponses(readResponses());
   },
 
-  saveResponse(input) {
-    const responses = readResponses();
+  async saveResponse(input) {
     const normalized = normalizeResponse(input);
+    try {
+      if (input.id && /^[0-9a-f]{24}$/i.test(String(input.id))) {
+        await api.put(`/dashboard/canned-responses/${input.id}`, normalized);
+      } else {
+        await api.post('/dashboard/canned-responses', normalized);
+      }
+      return await this.listResponses();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message;
+      if (err.response?.status === 409 || msg.includes('already')) {
+        throw new Error(`The shortcut ${normalized.shortcut} is already in use.`);
+      }
+      console.warn('[cannedResponseService] Save fallback:', msg);
+    }
+
+    const responses = readResponses();
     const duplicate = responses.find((response) => (
       response.shortcut === normalized.shortcut && response.id !== input.id
     ));
     if (duplicate) throw new Error(`The shortcut ${normalized.shortcut} is already in use.`);
 
     if (input.id) {
-      if (!responses.some((response) => response.id === input.id)) throw new Error('That canned response could not be found.');
       const next = responses.map((response) => (
         response.id === input.id ? { ...response, ...normalized, updatedAt: new Date().toISOString() } : response
       ));
       persist(next);
-      return this.listResponses();
+      return sortResponses(next);
     }
 
-    persist([{
+    const next = [{
       id: `reply-${crypto.randomUUID().slice(0, 10)}`,
       ...normalized,
       favorite: false,
       usageCount: 0,
       createdAt: new Date().toISOString(),
-    }, ...responses]);
-    return this.listResponses();
+    }, ...responses];
+    persist(next);
+    return sortResponses(next);
   },
 
-  deleteResponse(responseId) {
+  async deleteResponse(responseId) {
+    try {
+      if (/^[0-9a-f]{24}$/i.test(String(responseId))) {
+        await api.delete(`/dashboard/canned-responses/${responseId}`);
+        return await this.listResponses();
+      }
+    } catch (err) {
+      console.warn('[cannedResponseService] Delete fallback:', err.message);
+    }
     const responses = readResponses();
-    if (!responses.some((response) => response.id === responseId)) throw new Error('That canned response could not be found.');
-    persist(responses.filter((response) => response.id !== responseId));
-    return this.listResponses();
+    const next = responses.filter((response) => response.id !== responseId);
+    persist(next);
+    return sortResponses(next);
   },
 
-  toggleFavorite(responseId) {
+  async toggleFavorite(responseId) {
     const responses = readResponses();
-    if (!responses.some((response) => response.id === responseId)) throw new Error('That canned response could not be found.');
-    persist(responses.map((response) => (
-      response.id === responseId ? { ...response, favorite: !response.favorite } : response
-    )));
-    return this.listResponses();
+    const target = responses.find((response) => response.id === responseId);
+    const nextFav = target ? !target.favorite : true;
+
+    try {
+      if (/^[0-9a-f]{24}$/i.test(String(responseId))) {
+        await api.put(`/dashboard/canned-responses/${responseId}`, {
+          favorite: nextFav,
+          is_favorite: nextFav,
+        });
+        return await this.listResponses();
+      }
+    } catch (err) {
+      console.warn('[cannedResponseService] Toggle favorite fallback:', err.message);
+    }
+
+    const next = responses.map((response) => (
+      response.id === responseId ? { ...response, favorite: nextFav } : response
+    ));
+    persist(next);
+    return sortResponses(next);
   },
 
-  recordUsage(responseId, variables) {
+  async recordUsage(responseId, variables) {
     const responses = readResponses();
     const selected = responses.find((response) => response.id === responseId);
     if (!selected) throw new Error('That canned response could not be found.');
-    persist(responses.map((response) => (
+    const nextCount = (selected.usageCount || 0) + 1;
+
+    try {
+      if (/^[0-9a-f]{24}$/i.test(String(responseId))) {
+        await api.put(`/dashboard/canned-responses/${responseId}`, {
+          usageCount: nextCount,
+          usage_count: nextCount,
+        });
+        const updatedList = await this.listResponses();
+        return { content: expandCannedResponse(selected.content, variables), response: selected, responses: updatedList };
+      }
+    } catch (err) {
+      console.warn('[cannedResponseService] Record usage fallback:', err.message);
+    }
+
+    const next = responses.map((response) => (
       response.id === responseId
-        ? { ...response, usageCount: response.usageCount + 1, lastUsedAt: new Date().toISOString() }
+        ? { ...response, usageCount: nextCount, lastUsedAt: new Date().toISOString() }
         : response
-    )));
-    return { content: expandCannedResponse(selected.content, variables), response: selected, responses: this.listResponses() };
+    ));
+    persist(next);
+    return { content: expandCannedResponse(selected.content, variables), response: selected, responses: sortResponses(next) };
   },
 };
 

@@ -11,7 +11,7 @@ export const teamService = {
    */
   async listMembers() {
     const users = await User.find({ status: 'active' })
-      .select('name email role status last_login created_at')
+      .select('name email role status availability_status max_concurrent_chats skills territory title team satisfaction avg_resolution_hours last_login created_at')
       .lean();
 
     const enriched = await Promise.all(
@@ -21,24 +21,31 @@ export const teamService = {
           status: 'ACTIVE',
         });
 
-        const maxConcurrent = 5;
-        let availability = 'online';
-        if (activeChats >= maxConcurrent) {
-          availability = 'busy';
-        }
+        const maxConcurrent = Number(user.max_concurrent_chats || 5);
+        const baseStatus = user.availability_status || 'online';
+        const availability = activeChats >= maxConcurrent ? 'busy' : baseStatus;
 
         return {
-          id: user._id,
+          id: String(user._id),
           _id: user._id,
           name: user.name,
           email: user.email,
           role: user.role,
-          title: user.role === ROLES.SUPER_ADMIN ? 'Workspace Owner' : user.role === ROLES.ADMIN ? 'Team Lead' : 'Support Specialist',
-          team: user.role === ROLES.SUPER_ADMIN ? 'Executive' : 'Customer Experience',
+          title: user.title || (user.role === ROLES.SUPER_ADMIN ? 'Workspace Owner' : user.role === ROLES.ADMIN ? 'Team Lead' : 'Support Specialist'),
+          team: user.team || (user.role === ROLES.SUPER_ADMIN ? 'Executive' : 'Customer Experience'),
           status: availability,
+          skills: Array.isArray(user.skills) && user.skills.length > 0
+            ? user.skills
+            : ['WhatsApp', 'Telegram', 'Discord', 'Technical support', 'English'],
+          territory: user.territory || 'India · APAC',
           activeChats,
+          availableSlots: Math.max(0, maxConcurrent - activeChats),
+          chatsHandled: activeChats,
+          messagesSent: activeChats * 3,
+          averageFirstResponseMinutes: 2,
           maxConcurrentChats: maxConcurrent,
-          satisfaction: 4.9,
+          satisfaction: Number((user.satisfaction || 4.9).toFixed(1)),
+          avgResolutionHours: Number(user.avg_resolution_hours || 2.4),
           last_login: user.last_login,
           created_at: user.created_at,
         };

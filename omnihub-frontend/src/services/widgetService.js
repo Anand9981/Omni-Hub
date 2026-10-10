@@ -1,3 +1,5 @@
+import api from '../api/axios.js';
+
 const CONFIG_KEY = 'omnihub.demo.websiteWidget';
 const ANALYTICS_KEY = 'omnihub.demo.websiteWidgetAnalytics';
 
@@ -47,7 +49,7 @@ function readStored(key, fallback, description) {
     return { ...structuredClone(fallback), ...parsed };
   } catch (error) {
     console.error(`Could not read ${description}.`, error);
-    throw new Error(`${description} could not be loaded. Refresh the page to retry.`);
+    return structuredClone(fallback);
   }
 }
 
@@ -125,15 +127,22 @@ function validate(config) {
 
 function readConfig() {
   const config = readStored(CONFIG_KEY, DEFAULT_CONFIG, 'Website widget settings');
-  if (!config.apiKey) {
+  if (!config.apiKey || !/^ohw_[a-f0-9]{48}$/.test(config.apiKey)) {
     config.apiKey = createApiKey();
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
   }
   return validate(config);
 }
 
+function syncToBackend(payload) {
+  api.put('/dashboard/widget', payload).catch((err) => {
+    console.warn('[widgetService] Background sync warning:', err.message);
+  });
+}
+
 function saveAnalytics(analytics) {
   localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics));
+  syncToBackend({ analytics });
   return analytics;
 }
 
@@ -164,6 +173,40 @@ function isWithinBusinessHours(schedule, at = new Date()) {
 }
 
 export const widgetService = {
+  async loadFromBackend() {
+    try {
+      const res = await api.get('/dashboard/widget');
+      if (res.data?.success && res.data.data) {
+        const d = res.data.data;
+        const merged = {
+          ...readConfig(),
+          apiKey: /^ohw_[a-f0-9]{48}$/.test(d.apiKey || '') ? d.apiKey : readConfig().apiKey,
+          primaryColor: d.primaryColor || d.primary_color || '#3478e5',
+          secondaryColor: d.secondaryColor || '#f1f5ff',
+          textColor: d.textColor || '#1f2e44',
+          position: d.position || 'bottom-right',
+          size: d.size || 'medium',
+          language: d.language || 'English',
+          welcomeMessage: d.welcomeMessage || d.greeting_message || DEFAULT_CONFIG.welcomeMessage,
+          offlineMessage: d.offlineMessage || DEFAULT_CONFIG.offlineMessage,
+          avatarUrl: d.avatarUrl || '',
+          soundNotification: Boolean(d.soundNotification),
+          offlineMode: Boolean(d.offlineMode),
+          businessHours: d.businessHours || null,
+        };
+        const validated = validate(merged);
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(validated));
+        if (d.analytics && typeof d.analytics === 'object') {
+          localStorage.setItem(ANALYTICS_KEY, JSON.stringify({ ...DEFAULT_ANALYTICS, ...d.analytics }));
+        }
+        return validated;
+      }
+    } catch (err) {
+      console.warn('[widgetService] Backend load fallback:', err.message);
+    }
+    return this.getConfig();
+  },
+
   getConfig() {
     return structuredClone(readConfig());
   },
@@ -171,12 +214,22 @@ export const widgetService = {
   saveConfig(config) {
     const next = validate(config);
     localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
+    syncToBackend({
+      ...next,
+      primary_color: next.primaryColor,
+      greeting_message: next.welcomeMessage,
+    });
     return structuredClone(next);
   },
 
   rotateApiKey(overrides = {}) {
     const next = validate({ ...readConfig(), ...overrides, apiKey: createApiKey() });
     localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
+    syncToBackend({
+      ...next,
+      primary_color: next.primaryColor,
+      greeting_message: next.welcomeMessage,
+    });
     return structuredClone(next);
   },
 

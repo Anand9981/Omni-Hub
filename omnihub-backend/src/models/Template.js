@@ -10,13 +10,13 @@ const templateSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['MARKETING', 'UTILITY', 'AUTHENTICATION'],
-      default: 'UTILITY',
+      enum: ['MARKETING', 'UTILITY', 'AUTHENTICATION', 'SERVICE', 'Marketing', 'Utility', 'Authentication', 'Service'],
+      default: 'Utility',
       index: true,
     },
     language: {
       type: String,
-      default: 'en_US',
+      default: 'English',
     },
     body: {
       type: String,
@@ -34,6 +34,19 @@ const templateSchema = new mongoose.Schema(
     },
     rejection_reason: {
       type: String,
+      default: '',
+    },
+    version: {
+      type: Number,
+      default: 1,
+    },
+    versions: {
+      type: Array,
+      default: [],
+    },
+    submitted_at: {
+      type: Date,
+      default: null,
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,

@@ -3,15 +3,13 @@ import mongoose from 'mongoose';
 const agentNoteSchema = new mongoose.Schema(
   {
     conversation_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Conversation',
+      type: String,
       required: true,
       index: true,
     },
     author_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
+      type: mongoose.Schema.Types.Mixed,
+      required: false,
     },
     author_name: {
       type: String,
@@ -21,16 +19,26 @@ const agentNoteSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    mentions: [
-      {
-        user_id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        name: String,
-        email: String,
-      },
-    ],
+    type: {
+      type: String,
+      default: 'General note',
+    },
+    assigned_agent_id: {
+      type: String,
+      default: null,
+    },
+    attachments: {
+      type: Array,
+      default: [],
+    },
+    visibility: {
+      type: String,
+      default: 'internal',
+    },
+    mentions: {
+      type: Array,
+      default: [],
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

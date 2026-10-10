@@ -60,6 +60,39 @@ const userSchema = new mongoose.Schema(
     last_login: {
       type: Date,
     },
+    availability_status: {
+      type: String,
+      enum: ['online', 'busy', 'away', 'offline'],
+      default: 'online',
+    },
+    max_concurrent_chats: {
+      type: Number,
+      default: 5,
+    },
+    skills: {
+      type: [String],
+      default: ['WhatsApp', 'Telegram', 'Discord', 'Technical support', 'English', 'Hindi'],
+    },
+    territory: {
+      type: String,
+      default: 'India · APAC',
+    },
+    title: {
+      type: String,
+      default: '',
+    },
+    team: {
+      type: String,
+      default: 'Customer experience',
+    },
+    satisfaction: {
+      type: Number,
+      default: 4.9,
+    },
+    avg_resolution_hours: {
+      type: Number,
+      default: 2.4,
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

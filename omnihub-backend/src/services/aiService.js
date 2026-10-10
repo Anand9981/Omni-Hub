@@ -20,7 +20,7 @@ async function getGeminiClient() {
 /** Supported fallback models in order of preference */
 const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
 
-const callWithTimeout = (promise, ms = 6000) =>
+const callWithTimeout = (promise, ms = 15000) =>
   Promise.race([
     promise,
     new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms)),
@@ -46,7 +46,7 @@ async function callGemini(contents, { json = false } = {}) {
           contents,
           config,
         }),
-        6000,
+        15000,
       );
 
       const text = response?.text?.trim();

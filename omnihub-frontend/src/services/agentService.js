@@ -1,6 +1,7 @@
 import { demoStore } from './conversationService.js';
 import { ROLES } from '../utils/permissions.js';
 import { SENDER_TYPE } from '../utils/constants.js';
+import api from '../api/axios.js';
 
 const AGENTS_KEY = 'omnihub.demo.agents';
 const ROUND_ROBIN_KEY = 'omnihub.demo.agentRoundRobinCursor';
@@ -76,7 +77,7 @@ function readAgents() {
     return stored;
   } catch (error) {
     console.error('Could not read demo agents.', error);
-    throw new Error('Agent data could not be loaded. Refresh the page to retry.');
+    return SEEDED_AGENTS;
   }
 }
 
@@ -96,7 +97,7 @@ function matchingScore(agent, conversation, strategy) {
     lead?.status,
     ...(lead?.lead_tags || []),
   ].join(' '));
-  const skills = agent.skills.reduce((score, skill) => score + (context.includes(normalize(skill)) ? 1 : 0), 0);
+  const skills = (agent.skills || []).reduce((score, skill) => score + (context.includes(normalize(skill)) ? 1 : 0), 0);
   const inIndia = String(conversation.sender_phone || '').startsWith('+91');
   const territory = normalize(agent.territory);
   const territoryMatch = inIndia
@@ -106,7 +107,9 @@ function matchingScore(agent, conversation, strategy) {
 }
 
 function withWorkload(agent, conversations, messages) {
-  const assigned = conversations.filter((conversation) => conversation.assigned_agent_id === agent.id);
+  const assigned = conversations.filter((conversation) => (
+    String(conversation.assigned_agent_id?._id || conversation.assigned_agent_id || '') === String(agent.id)
+  ));
   const sent = messages.filter((message) => (
     assigned.some((conversation) => conversation.id === message.conversation_id)
     && message.sender_type === SENDER_TYPE.AGENT
@@ -128,19 +131,25 @@ function withWorkload(agent, conversations, messages) {
       : [];
   });
 
-  const activeChats = assigned.length;
-  const status = activeChats >= agent.maxConcurrentChats ? 'busy' : agent.status;
+  const maxConcurrent = Number(agent.maxConcurrentChats || 5);
+  const activeChats = Math.max(Number(agent.activeChats || 0), assigned.length);
+  const status = activeChats >= maxConcurrent ? 'busy' : (agent.status || 'online');
   return {
     ...agent,
+    id: String(agent._id || agent.id),
+    maxConcurrentChats: maxConcurrent,
+    skills: Array.isArray(agent.skills) && agent.skills.length ? agent.skills : ['General support', 'WhatsApp', 'Telegram'],
+    territory: agent.territory || 'India · APAC',
+    avgResolutionHours: Number(agent.avgResolutionHours || 2.4),
     status,
     activeChats,
-    availableSlots: Math.max(0, agent.maxConcurrentChats - activeChats),
+    availableSlots: Math.max(0, maxConcurrent - activeChats),
     chatsHandled: activeChats,
-    messagesSent: sent.length,
+    messagesSent: Math.max(Number(agent.messagesSent || 0), sent.length),
     averageFirstResponseMinutes: responseMinutes.length
       ? Math.round(responseMinutes.reduce((sum, value) => sum + value, 0) / responseMinutes.length)
-      : null,
-    satisfaction: Number(agent.satisfaction.toFixed(1)),
+      : (agent.averageFirstResponseMinutes ?? 2),
+    satisfaction: Number(Number(agent.satisfaction || 4.9).toFixed(1)),
   };
 }
 
@@ -151,11 +160,11 @@ export const agentService = {
     const email = String(user.email || '').trim().toLowerCase();
     if (!email) throw new Error('Your agent account needs an email address to open its assigned inbox.');
     const agents = readAgents();
-    const existing = agents.find((agent) => agent.id === user.agentId || agent.email.toLowerCase() === email);
+    const existing = agents.find((agent) => agent.id === user.agentId || agent.id === user.id || agent.email.toLowerCase() === email);
     if (existing) return existing.id;
 
     const agent = {
-      id: demoStore.newId('agent'),
+      id: user.id || demoStore.newId('agent'),
       name: user.name || email,
       email,
       role: ROLES.AGENT,
@@ -172,15 +181,42 @@ export const agentService = {
     return agent.id;
   },
 
-  listAgents() {
+  listAgentsSync() {
     demoStore.ensureSeed();
     const conversations = demoStore.conversations();
     const messages = demoStore.messages();
     return readAgents().map((agent) => withWorkload(agent, conversations, messages));
   },
 
+  async listAgents() {
+    demoStore.ensureSeed();
+    const conversations = demoStore.conversations();
+    const messages = demoStore.messages();
+
+    try {
+      const res = await api.get('/dashboard/agents');
+      if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        const remoteAgents = res.data.data.map((a) => ({
+          ...a,
+          id: String(a._id || a.id),
+        }));
+        const remoteEmails = new Set(remoteAgents.map((a) => String(a.email || '').toLowerCase()));
+        const merged = [
+          ...remoteAgents,
+          ...SEEDED_AGENTS.filter((s) => !remoteEmails.has(s.email.toLowerCase())),
+        ];
+        saveAgents(merged);
+        return merged.map((agent) => withWorkload(agent, conversations, messages));
+      }
+    } catch (err) {
+      console.warn('[agentService] Backend listAgents fallback:', err.message);
+    }
+
+    return readAgents().map((agent) => withWorkload(agent, conversations, messages));
+  },
+
   getAgent(agentId) {
-    return this.listAgents().find((agent) => agent.id === agentId) || null;
+    return this.listAgentsSync().find((agent) => agent.id === agentId) || null;
   },
 
   getAgentConversations(agentId) {
@@ -198,39 +234,34 @@ export const agentService = {
       }));
   },
 
-  assignConversation(conversationId, agentId) {
+  async assignConversation(conversationId, agentId) {
     demoStore.ensureSeed();
-    const conversations = demoStore.conversations();
-    const conversation = conversations.find((item) => item.id === conversationId);
-    if (!conversation) throw new Error('That conversation could not be found.');
-
-    if (agentId) {
-      const agent = this.getAgent(agentId);
-      if (!agent) throw new Error('Choose a valid agent.');
-      if (agentId !== conversation.assigned_agent_id && agent.availableSlots < 1) {
-        throw new Error(`${agent.name} has reached the concurrent-chat limit.`);
+    try {
+      if (/^[0-9a-f]{24}$/i.test(String(conversationId))) {
+        await api.post(`/dashboard/agents/${conversationId}/assign`, {
+          agentId: /^[0-9a-f]{24}$/i.test(String(agentId || '')) ? agentId : null,
+        });
       }
-      if (agentId !== conversation.assigned_agent_id && agent.status !== 'online') {
-        throw new Error(`${agent.name} is not available for new conversations.`);
-      }
+    } catch (err) {
+      console.warn('[agentService] Backend assignConversation fallback:', err.message);
     }
 
+    const conversations = demoStore.conversations();
     const updated = conversations.map((item) => (
       item.id === conversationId
         ? { ...item, assigned_agent_id: agentId || null, updated_at: new Date().toISOString() }
         : item
     ));
     demoStore.saveConversations(updated);
-    return { conversationId, agentId: agentId || null, agents: this.listAgents() };
+    return { conversationId, agentId: agentId || null, agents: await this.listAgents() };
   },
 
-  autoAssign(conversationId, strategy = 'load') {
+  async autoAssign(conversationId, strategy = 'load') {
     demoStore.ensureSeed();
-    const conversation = demoStore.conversations().find((item) => item.id === conversationId);
-    if (!conversation) throw new Error('That conversation could not be found.');
-    const available = this.listAgents().filter((agent) => agent.status === 'online' && agent.availableSlots > 0);
+    const available = (await this.listAgents()).filter((agent) => agent.status === 'online' && agent.availableSlots > 0);
     if (!available.length) throw new Error('No online agents have capacity right now.');
 
+    const conversation = demoStore.conversations().find((item) => item.id === conversationId) || { id: conversationId, platform: 'whatsapp' };
     let chosen;
     if (strategy === 'roundRobin') {
       const cursor = Number(localStorage.getItem(ROUND_ROBIN_KEY) || 0);
@@ -242,10 +273,10 @@ export const agentService = {
         return scoreDifference || (a.activeChats / a.maxConcurrentChats) - (b.activeChats / b.maxConcurrentChats);
       })[0];
     }
-    return this.assignConversation(conversationId, chosen.id);
+    return await this.assignConversation(conversationId, chosen.id);
   },
 
-  updateAgent(agentId, updates) {
+  async updateAgent(agentId, updates) {
     demoStore.ensureSeed();
     const allowedStatuses = ['online', 'busy', 'away', 'offline'];
     if (updates.status && !allowedStatuses.includes(updates.status)) {
@@ -255,11 +286,18 @@ export const agentService = {
       && (!Number.isInteger(updates.maxConcurrentChats) || updates.maxConcurrentChats < 1 || updates.maxConcurrentChats > 10)) {
       throw new Error('Concurrent chats must be between 1 and 10.');
     }
+
+    try {
+      if (/^[0-9a-f]{24}$/i.test(String(agentId))) {
+        await api.put(`/dashboard/agents/${agentId}`, updates);
+      }
+    } catch (err) {
+      console.warn('[agentService] Backend updateAgent fallback:', err.message);
+    }
+
     const agents = readAgents();
-    const exists = agents.some((agent) => agent.id === agentId);
-    if (!exists) throw new Error('That agent could not be found.');
     const updated = agents.map((agent) => (agent.id === agentId ? { ...agent, ...updates } : agent));
     saveAgents(updated);
-    return this.listAgents();
+    return await this.listAgents();
   },
 };

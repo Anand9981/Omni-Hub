@@ -1,3 +1,5 @@
+import api from '../api/axios.js';
+
 const STORAGE_KEY = 'omnihub.demo.businessHours';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const LANGUAGES = ['English', 'Hindi', 'Hinglish'];
@@ -30,6 +32,27 @@ const DEFAULT_SETTINGS = {
   },
 };
 
+function mergeWithDefaults(settings) {
+  return {
+    ...structuredClone(DEFAULT_SETTINGS),
+    ...settings,
+    weeklySchedule: Array.isArray(settings?.weeklySchedule) && settings.weeklySchedule.length === 7
+      ? settings.weeklySchedule
+      : structuredClone(DEFAULT_SETTINGS.weeklySchedule),
+    holidays: Array.isArray(settings?.holidays) ? settings.holidays : [],
+    specialHours: Array.isArray(settings?.specialHours) ? settings.specialHours : [],
+    awayMessage: {
+      ...DEFAULT_SETTINGS.awayMessage,
+      ...settings?.awayMessage,
+      messages: {
+        ...DEFAULT_SETTINGS.awayMessage.messages,
+        ...settings?.awayMessage?.messages,
+      },
+    },
+    holidayMode: { ...DEFAULT_SETTINGS.holidayMode, ...settings?.holidayMode },
+  };
+}
+
 function readSettings() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
@@ -42,15 +65,10 @@ function readSettings() {
     if (!settings || typeof settings !== 'object' || !Array.isArray(settings.weeklySchedule)) {
       throw new Error('Business hours settings have an invalid shape.');
     }
-    return {
-      ...structuredClone(DEFAULT_SETTINGS),
-      ...settings,
-      awayMessage: { ...DEFAULT_SETTINGS.awayMessage, ...settings.awayMessage },
-      holidayMode: { ...DEFAULT_SETTINGS.holidayMode, ...settings.holidayMode },
-    };
+    return mergeWithDefaults(settings);
   } catch (error) {
     console.error('Could not read business hours settings.', error);
-    throw new Error('Business hours could not be loaded. Refresh the page to retry.');
+    return structuredClone(DEFAULT_SETTINGS);
   }
 }
 
@@ -118,12 +136,37 @@ function validate(settings) {
 }
 
 export const businessHoursService = {
-  getSettings() {
+  getSettingsSync() {
     return readSettings();
   },
-  saveSettings(settings) {
+
+  async getSettings() {
+    try {
+      const res = await api.get('/dashboard/business-hours');
+      if (res.data?.success && res.data.data) {
+        const merged = mergeWithDefaults(res.data.data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        return merged;
+      }
+    } catch (err) {
+      console.warn('[businessHoursService] Backend API fallback:', err.message);
+    }
+    return readSettings();
+  },
+
+  async saveSettings(settings) {
     const next = validate(settings);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    try {
+      const res = await api.put('/dashboard/business-hours', next);
+      if (res.data?.success && res.data.data) {
+        const merged = mergeWithDefaults(res.data.data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        return merged;
+      }
+    } catch (err) {
+      console.warn('[businessHoursService] Save fallback:', err.message);
+    }
     return next;
   },
 };

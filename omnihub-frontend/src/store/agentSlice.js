@@ -4,7 +4,7 @@ import { agentService } from '../services/agentService.js';
 export const loadAgents = createAsyncThunk('agents/load', async (user) => {
   const currentAgentId = agentService.ensureCurrentUserAgent(user);
   return {
-    items: agentService.listAgents(),
+    items: await agentService.listAgents(),
     currentAgentId,
     isAgentScoped: user?.role === 'Agent',
   };

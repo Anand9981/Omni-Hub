@@ -15,9 +15,10 @@ export function validateTemplate(req, res, next) {
         formatResponse(false, null, 'Template body is required.'),
       );
     }
-    if (category && !['MARKETING', 'UTILITY', 'AUTHENTICATION'].includes(category)) {
+    const allowedCategories = ['MARKETING', 'UTILITY', 'AUTHENTICATION', 'SERVICE', 'Marketing', 'Utility', 'Authentication', 'Service'];
+    if (category && !allowedCategories.includes(category)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(
-        formatResponse(false, null, 'Category must be MARKETING, UTILITY, or AUTHENTICATION.'),
+        formatResponse(false, null, 'Category must be MARKETING, UTILITY, AUTHENTICATION, or SERVICE.'),
       );
     }
   }

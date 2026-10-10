@@ -1,4 +1,5 @@
 import { demoStore } from './conversationService.js';
+import api from '../api/axios.js';
 
 export const NOTE_TYPES = ['General note', 'Follow-up', 'Issue', 'Resolution', 'Escalation'];
 const NOTIFICATIONS_KEY = 'omnihub.demo.noteNotifications';
@@ -11,24 +12,54 @@ function readNotifications() {
     return value;
   } catch (error) {
     console.error('Could not read note notifications.', error);
-    throw new Error('Note notifications could not be loaded. Refresh the page to retry.');
+    return [];
   }
 }
 
 export const noteService = {
-  listNotes(conversationId) {
+  async listNotes(conversationId) {
+    if (!conversationId) return [];
+    try {
+      const res = await api.get(`/dashboard/notes/${conversationId}`);
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        return res.data.data
+          .map((n) => ({
+            ...n,
+            id: String(n._id || n.id),
+            conversation_id: String(n.conversation_id || conversationId),
+            text: n.text || n.content || '',
+            type: n.type || 'General note',
+            mentions: Array.isArray(n.mentions) ? n.mentions : [],
+            attachments: Array.isArray(n.attachments) ? n.attachments : [],
+            created_at: n.created_at || new Date().toISOString(),
+            visibility: n.visibility || 'internal',
+          }))
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+    } catch (err) {
+      console.warn('[noteService] Backend listNotes fallback:', err.message);
+    }
+
     demoStore.ensureSeed();
     return demoStore.notes()
       .filter((note) => note.conversation_id === conversationId)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
 
-  listMentionNotifications(agentId) {
+  async listMentionNotifications(agentId) {
     if (!agentId) return [];
+    try {
+      const res = await api.get('/dashboard/notes/mentions', { params: { agentId } });
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        return res.data.data;
+      }
+    } catch (err) {
+      console.warn('[noteService] Backend mentions fallback:', err.message);
+    }
     return readNotifications().filter((item) => item.agent_id === agentId);
   },
 
-  addNote({ conversationId, text, authorName, authorId, type, assignedAgentId, mentions, attachments }) {
+  async addNote({ conversationId, text, authorName, authorId, type, assignedAgentId, mentions, attachments }) {
     demoStore.ensureSeed();
     const content = String(text || '').trim();
     if (!conversationId) throw new Error('Select a conversation before adding a note.');
@@ -45,6 +76,25 @@ export const noteService = {
     const uniqueMentions = [...new Map(mentions
       .filter((mention) => mention.id && mention.id !== authorId && content.includes(`@${mention.name}`))
       .map((mention) => [mention.id, mention])).values()];
+
+    try {
+      const res = await api.post(`/dashboard/notes/${conversationId}`, {
+        content,
+        text: content,
+        authorName: authorName || 'You',
+        authorId: authorId || null,
+        type,
+        assignedAgentId: assignedAgentId || null,
+        mentions: uniqueMentions,
+        attachments,
+      });
+      if (res.data?.success && res.data.data) {
+        return res.data.data;
+      }
+    } catch (err) {
+      console.warn('[noteService] Backend addNote fallback:', err.message);
+    }
+
     const note = {
       id: demoStore.newId('note'),
       conversation_id: conversationId,
@@ -79,16 +129,22 @@ export const noteService = {
     return note;
   },
 
-  deleteNote({ conversationId, noteId }) {
+  async deleteNote({ conversationId, noteId }) {
+    try {
+      if (/^[0-9a-f]{24}$/i.test(String(noteId))) {
+        await api.delete(`/dashboard/notes/${noteId}`);
+        return await this.listNotes(conversationId);
+      }
+    } catch (err) {
+      console.warn('[noteService] Backend deleteNote fallback:', err.message);
+    }
+
     demoStore.ensureSeed();
     const notes = demoStore.notes();
-    if (!notes.some((note) => note.id === noteId && note.conversation_id === conversationId)) {
-      throw new Error('That note could not be found in this conversation.');
-    }
     demoStore.saveNotes(notes.filter((note) => note.id !== noteId));
     localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(
       readNotifications().filter((item) => item.note_id !== noteId),
     ));
-    return this.listNotes(conversationId);
+    return await this.listNotes(conversationId);
   },
 };

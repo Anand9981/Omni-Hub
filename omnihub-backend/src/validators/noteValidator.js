@@ -1,5 +1,6 @@
 export function validateCreateNote(body) {
-  if (!body.content || !body.content.trim()) {
+  const text = body.content || body.text;
+  if (!text || !String(text).trim()) {
     return { isValid: false, message: 'Note content cannot be empty.' };
   }
   return { isValid: true };

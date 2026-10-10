@@ -2,7 +2,7 @@ const ACCESS_TOKEN_KEY = 'omnihub_access_token';
 const REFRESH_TOKEN_KEY = 'omnihub_refresh_token';
 
 // Default pre-seeded admin token (valid for 365 days) for seamless developer testing
-const DEFAULT_DEV_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWM2MDBiNTEzNGViMzBlMzU2YTQ3ODciLCJyb2xlIjoiU3VwZXIgQWRtaW4iLCJlbWFpbCI6ImFkbWluQG9tbmlodWIuaW8iLCJpYXQiOjE3OTE0MDUzMDgsImV4cCI6MTgyMjk0MTMwOH0.qhQpeWq4ftAtA_6LVfk8dnBDbdN_H87NEPLOFIZnsWQ';
+const DEFAULT_DEV_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWM5ZGM2M2NiMGM5YjYyYmViMWUwNDEiLCJyb2xlIjoiU3VwZXIgQWRtaW4iLCJlbWFpbCI6InBhcm1hbmFuZHNhaHUyMDA1QGdtYWlsLmNvbSIsImlhdCI6MTc5MTYyMDI5NSwiZXhwIjoxODIzMTU2Mjk1fQ.pvZYbogKZYa0u8Y7Iwiwtlycmxh-hQlscHh4DgYsfH0';
 
 export const tokenStorage = {
   getToken() {

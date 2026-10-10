@@ -94,6 +94,32 @@ export const agentController = {
       next(error);
     }
   },
+
+  async updateAgent(req, res, next) {
+    try {
+      const { agentId } = req.params;
+      const { status, maxConcurrentChats, skills, territory, title, team } = req.body;
+      const updates = {};
+      if (status && ['online', 'busy', 'away', 'offline'].includes(status)) {
+        updates.availability_status = status;
+      }
+      if (maxConcurrentChats !== undefined) {
+        updates.max_concurrent_chats = Number(maxConcurrentChats);
+      }
+      if (Array.isArray(skills)) updates.skills = skills;
+      if (territory !== undefined) updates.territory = territory;
+      if (title !== undefined) updates.title = title;
+      if (team !== undefined) updates.team = team;
+
+      await User.findByIdAndUpdate(agentId, { $set: updates }, { new: true });
+      const enriched = await teamService.listMembers();
+      return res.status(HTTP_STATUS.OK).json(
+        formatResponse(true, enriched, 'Agent updated successfully.'),
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
 };
 
 export default agentController;

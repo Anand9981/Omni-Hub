@@ -3,22 +3,22 @@ import { noteService } from '../services/noteService.js';
 
 export const loadNotes = createAsyncThunk('notes/load', async (conversationId) => ({
   conversationId,
-  items: noteService.listNotes(conversationId),
+  items: await noteService.listNotes(conversationId),
 }));
 
 export const loadMentionNotifications = createAsyncThunk(
   'notes/loadMentionNotifications',
-  async (agentId) => noteService.listMentionNotifications(agentId),
+  async (agentId) => await noteService.listMentionNotifications(agentId),
 );
 
 export const addNote = createAsyncThunk('notes/add', async (note) => {
-  noteService.addNote(note);
-  return { conversationId: note.conversationId, items: noteService.listNotes(note.conversationId) };
+  await noteService.addNote(note);
+  return { conversationId: note.conversationId, items: await noteService.listNotes(note.conversationId) };
 });
 
 export const deleteNote = createAsyncThunk('notes/delete', async (payload) => ({
   conversationId: payload.conversationId,
-  items: noteService.deleteNote(payload),
+  items: await noteService.deleteNote(payload),
 }));
 
 const initialState = {
