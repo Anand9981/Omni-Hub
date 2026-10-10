@@ -1,5 +1,5 @@
-import { Check, Copy, Download, KeyRound, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
+import BackupCodeCard from '../../components/auth/BackupCodeCard.jsx';
 import { authService } from '../../services/authDemoService.js';
 
 export default function BackupCodes() {
@@ -44,20 +44,14 @@ export default function BackupCodes() {
     setSaved(true);
   }
   return (
-    <div className="page-card">
-      <div className="backup-warning"><KeyRound size={16} /><span><strong>Keep these somewhere safe.</strong> Anyone with a code can access your account. They’re stored only in this browser demo.</span></div>
-      {codes.length ? (
-        <div className="backup-codes">{codes.map((code, index) => <span key={`${code}-${index}`}><i>{String(index + 1).padStart(2, '0')}</i>{code}</span>)}</div>
-      ) : (
-        <div className="empty-state">Your backup codes haven’t been generated yet. Create a fresh set to continue.</div>
-      )}
-      {notice && <div className="alert alert--error" role="alert">{notice}</div>}
-      <div className="backup-actions">
-        <button className="secondary-button" onClick={copyCodes} type="button">{copied ? <Check size={16} /> : <Copy size={16} />}{copied ? 'Copied' : 'Copy codes'}</button>
-        <button className="primary-button" onClick={downloadCodes} type="button"><Download size={16} /> {saved ? 'Saved to your device' : 'Download codes'}</button>
-      </div>
-      <button className="text-button regenerate-button" onClick={generateNewCodes} type="button"><RefreshCw size={14} /> {codes.length ? 'Replace backup codes' : 'Generate backup codes'}</button>
-      <div className="demo-note"><span className="demo-note-dot" /> Frontend demo · These codes are examples, not server-issued recovery credentials.</div>
-    </div>
+    <BackupCodeCard
+      codes={codes}
+      copied={copied}
+      saved={saved}
+      notice={notice}
+      onCopy={copyCodes}
+      onDownload={downloadCodes}
+      onRegenerate={generateNewCodes}
+    />
   );
 }

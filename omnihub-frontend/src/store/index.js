@@ -9,15 +9,14 @@ import messageReducer from './messageSlice.js';
 import noteReducer from './noteSlice.js';
 import businessHoursReducer from './businessHoursSlice.js';
 import templateReducer from './templateSlice.js';
+import authReducer from './auth/authSlice.js';
 
 /**
  * Redux Toolkit store for the workspace.
- *
- * Module 5 auth still runs through its own service layer; dashboard slices
- * cover conversations, messages, approvals, analytics, agents and leads.
  */
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     conversations: conversationReducer,
     messages: messageReducer,
     approvals: approvalReducer,

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useOTPTimer } from '../../hooks/useOTPTimer.js';
 
 /**
  * Resend control for one-time codes.
@@ -8,21 +9,15 @@ import { useEffect, useState } from 'react';
  * component only renders them.
  */
 export default function ResendTimer({ initialSeconds = 30, onResend, attemptsLeft, exhausted = false }) {
-  const [seconds, setSeconds] = useState(initialSeconds);
+  const { seconds, resetTimer } = useOTPTimer(initialSeconds);
   const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    if (seconds <= 0) return undefined;
-    const timer = window.setTimeout(() => setSeconds((value) => value - 1), 1000);
-    return () => window.clearTimeout(timer);
-  }, [seconds]);
 
   async function resend() {
     if (seconds > 0 || sending) return;
     setSending(true);
     try {
       await onResend();
-      setSeconds(initialSeconds);
+      resetTimer(initialSeconds);
     } finally {
       setSending(false);
     }

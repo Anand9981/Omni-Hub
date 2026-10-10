@@ -1,5 +1,6 @@
-import { ArrowRight, Clock3, History, KeyRound, Laptop2, MapPin, Shield, UserRound } from 'lucide-react';
+import { ArrowRight, Clock3, History, KeyRound, Laptop2, MapPin, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import TwoFASetupCard from '../../components/auth/TwoFASetupCard.jsx';
 import { authService } from '../../services/authDemoService.js';
 
 const workspaceRoles = [
@@ -22,7 +23,7 @@ export default function SecurityHome() {
       </div>
       <div className="security-section-title">SECURITY & SESSIONS</div>
       <Link className="settings-row" to="/sessions"><span className="settings-row-icon"><Laptop2 size={17} /></span><span className="settings-row-copy"><strong>Active sessions</strong><small>{sessions.length} of 3 devices in use</small></span><ArrowRight size={16} /></Link>
-      <div className="settings-row settings-row--static"><span className="settings-row-icon settings-row-icon--green"><Shield size={17} /></span><span className="settings-row-copy"><strong>Two-step verification</strong><small>Email verification is enabled</small></span><span className="status-pill">Enabled</span></div>
+      <TwoFASetupCard enabled={true} method="Email OTP verification is enabled" />
       <Link className="settings-row" to="/backup-codes"><span className="settings-row-icon"><KeyRound size={17} /></span><span className="settings-row-copy"><strong>Backup codes</strong><small>Keep a secure way back in</small></span><ArrowRight size={16} /></Link>
       <div className="roles-panel">
         <div className="security-section-title">WORKSPACE ROLES</div>
