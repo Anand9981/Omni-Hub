@@ -5,6 +5,7 @@ import logger from '../utils/logger.js';
 let transporter = null;
 
 function getTransporter() {
+  if (process.env.NODE_ENV === 'test') return null;
   if (!transporter && env.SMTP_USER && env.SMTP_PASS) {
     transporter = nodemailer.createTransport({
       host: env.SMTP_HOST || 'smtp.gmail.com',

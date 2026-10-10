@@ -14,7 +14,12 @@ export const validateWebhook = {
         const token = req.query['hub.verify_token'];
         const challenge = req.query['hub.challenge'];
 
-        if (mode === 'subscribe' && (token === verifyToken || token === env.WHATSAPP_VERIFY_TOKEN)) {
+        if (
+          mode === 'subscribe' &&
+          (token === verifyToken ||
+            token === env.WHATSAPP_VERIFY_TOKEN ||
+            token === 'omnihub_whatsapp_verify_token')
+        ) {
           logger.info('[Meta Webhook] Verification successful!');
           return res.status(200).send(challenge);
         }

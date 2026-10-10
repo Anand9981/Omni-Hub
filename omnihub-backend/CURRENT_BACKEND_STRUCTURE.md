@@ -1,23 +1,27 @@
 # OmniHub Backend — Current Final Structure
-> Last updated: 2026-10-04 | Test Suites: 74 ✅ | Tests: 84 ✅
+> Last updated: 2026-10-10 | Test Suites: 74 ✅ | Empty Files: 0 ✅
 
 ---
 
 ## Root Files
 
-```
+```text
 omnihub-backend/
 ├── .dockerignore
 ├── .env
 ├── .env.example
-├── BACKEND_STRUCTURE.md              ← Original reference spec
-├── CURRENT_BACKEND_STRUCTURE.md      ← This file (actual current state)
-├── Dockerfile
-├── README.md
+├── .eslintrc.json
+├── .gitignore
+├── .prettierrc
+├── BACKEND_STRUCTURE.md              ← Full tree reference
+├── CURRENT_BACKEND_STRUCTURE.md      ← Detailed breakdown (this file)
 ├── docker-compose.yml
+├── Dockerfile
 ├── jest.config.js
-├── package.json
+├── nodemon.json
 ├── package-lock.json
+├── package.json
+├── README.md
 └── swagger.json
 ```
 
@@ -25,7 +29,7 @@ omnihub-backend/
 
 ## GitHub CI/CD Workflows
 
-```
+```text
 .github/
 └── workflows/
     ├── deploy.yml                    ← Production deploy workflow
@@ -37,10 +41,10 @@ omnihub-backend/
 
 ## Documentation
 
-```
+```text
 docs/
 ├── API.md                            ← Full API endpoint reference
-├── ARCHITECTURE.md                   ← System architecture guide
+├── ARCHITECTURE.md                   ← System architecture & Mermaid diagrams
 ├── CONTRIBUTING.md                   ← Developer contribution guide
 └── DEPLOYMENT.md                     ← Docker / cloud deployment guide
 ```
@@ -49,7 +53,7 @@ docs/
 
 ## Postman Collections
 
-```
+```text
 postman/
 ├── OmniHub.postman_collection.json   ← All API requests collection
 └── OmniHub.postman_environment.json  ← Environment variables (dev/prod)
@@ -59,7 +63,7 @@ postman/
 
 ## Scripts
 
-```
+```text
 scripts/
 ├── backup.js                         ← MongoDB backup automation
 ├── healthcheck.js                    ← Docker HEALTHCHECK probe
@@ -71,34 +75,35 @@ scripts/
 
 ## Source (`src/`)
 
-### Entry Points
+### Entry Points (2 files)
 
-```
+```text
 src/
-├── server.js                         ← HTTP server, Socket.io, jobs bootstrap
-└── app.js                            ← Express app, middleware, routes mount
+├── app.js                            ← Express app, middleware, routes mount
+└── server.js                         ← HTTP server, Socket.io, Discord/Telegram bots, jobs bootstrap
 ```
 
 ---
 
-### Config (7 files)
+### Config (8 files)
 
-```
+```text
 src/config/
 ├── cloudinary.js                     ← Cloudinary SDK init
 ├── cors.js                           ← CORS policy
-├── db.js                             ← Mongoose connection
-├── env.js                            ← dotenv loader + env object
+├── db.js                             ← Mongoose MongoDB Atlas connection
+├── env.js                            ← dotenv loader + validated env object
 ├── helmet.js                         ← Helmet security headers
-├── redis.js                          ← Upstash Redis client
+├── redis.js                          ← Upstash Redis Cloud client
+├── sentry.js                         ← Sentry error monitoring
 └── swagger.js                        ← Swagger UI server + /api/docs mount
 ```
 
 ---
 
-### Controllers (18 files)
+### Controllers (21 files)
 
-```
+```text
 src/controllers/
 ├── agentController.js
 ├── aiContextController.js
@@ -112,19 +117,22 @@ src/controllers/
 ├── channelController.js
 ├── conversationController.js
 ├── leadController.js
+├── mediaController.js
+├── menuController.js
 ├── messageController.js
 ├── noteController.js
 ├── onboardingController.js
 ├── subscriptionController.js
+├── teamController.js
 ├── templateController.js
 └── widgetController.js
 ```
 
 ---
 
-### Background Jobs
+### Background Jobs (5 files)
 
-```
+```text
 src/jobs/
 ├── analyticsAggregator.js            ← Hourly analytics rollup cron
 ├── cleanup.js                        ← Session/expired-data cleanup cron
@@ -135,27 +143,29 @@ src/jobs/
 
 ---
 
-### Middleware (10 files)
+### Middleware (12 files)
 
-```
+```text
 src/middleware/
 ├── auth.js                           ← JWT protect middleware
 ├── contentFilter.js                  ← Input content filtering
 ├── errorHandler.js                   ← Global error handler
+├── httpsEnforce.js                   ← Production HTTPS enforcement
 ├── notFound.js                       ← 404 handler
 ├── rateLimiter.js                    ← Express rate limiter
 ├── requestLogger.js                  ← Morgan HTTP logger
 ├── roleCheck.js                      ← RBAC role guard
+├── sanitize.js                       ← NoSQL & XSS input sanitizer
 ├── upload.js                         ← Cloudinary file upload
-├── validateRequest.js                ← Joi/validator request body middleware
+├── validateRequest.js                ← Request body validation middleware
 └── validateWebhook.js                ← Meta/Telegram/Website webhook verification
 ```
 
 ---
 
-### Models (21 files)
+### Models (23 files)
 
-```
+```text
 src/models/
 ├── AgentNote.js
 ├── AIContext.js
@@ -166,31 +176,33 @@ src/models/
 ├── Conversation.js
 ├── DailyAnalytics.js
 ├── HourlyAnalytics.js
+├── index.js                          ← Barrel export for all models
 ├── Invoice.js
 ├── Lead.js
+├── MenuConfig.js
 ├── Message.js
 ├── OnboardingProgress.js
 ├── PendingApproval.js
 ├── Plan.js
 ├── Session.js
 ├── Subscription.js
+├── TeamInvite.js
 ├── Template.js
 ├── User.js
-├── WidgetConfig.js
-└── index.js                          ← Barrel export for all models
+└── WidgetConfig.js
 ```
 
 ---
 
-### Routes
+### Routes (28 files)
 
-```
+```text
 src/routes/
-├── index.js                          ← Central router (mounts all sub-routers)
-├── ai.js                             ← /api/ai/*
-├── auth.js                           ← /api/auth/*
+├── ai.js                             ← /api/ai/* (generate, polish, suggestions, summarize)
+├── auth.js                           ← /api/auth/* (login, register, 2FA, sessions)
+├── index.js                          ← Central router (mounts all sub-routers + aliases)
 │
-├── dashboard/                        ← /api/dashboard/* (all protected)
+├── dashboard/                        ← /api/dashboard/* (protected operational routes)
 │   ├── agents.js
 │   ├── aiContext.js
 │   ├── analytics.js
@@ -201,14 +213,17 @@ src/routes/
 │   ├── channels.js
 │   ├── conversations.js
 │   ├── leads.js
+│   ├── media.js
+│   ├── menus.js
 │   ├── messages.js
 │   ├── notes.js
 │   ├── onboarding.js
 │   ├── subscription.js
+│   ├── team.js
 │   ├── templates.js
 │   └── widget.js
 │
-└── webhooks/                         ← /api/webhooks/* (public inbound)
+└── webhooks/                         ← /api/webhooks/* (public inbound webhooks)
     ├── discord.js
     ├── instagram.js
     ├── linkedin.js
@@ -219,45 +234,49 @@ src/routes/
 
 ---
 
-### Services (26 files)
+### Services (29 files)
 
-```
+```text
 src/services/
 ├── agentService.js
 ├── aiContextService.js
-├── aiService.js                      ← Gemini AI integration
+├── aiService.js                      ← Google Gemini AI integration
 ├── analyticsService.js
 ├── approvalService.js
 ├── authService.js
+├── autoPilotService.js               ← Autonomous AI reply & approval routing
 ├── billingService.js
 ├── businessHoursService.js
 ├── cannedResponseService.js
 ├── channelService.js
 ├── conversationService.js
-├── dispatcher.js                     ← Outbound message dispatcher
-├── emailService.js
-├── leadExtractor.js                  ← AI lead extraction from conversations
+├── discordService.js                 ← Live Discord Gateway bot client
+├── dispatcher.js                     ← Multi-channel outbound message dispatcher
+├── emailService.js                   ← Gmail SMTP Nodemailer delivery
+├── leadExtractor.js                  ← AI & Regex CRM lead extraction
 ├── leadParsingService.js
-├── mediaService.js                   ← Cloudinary media upload
-├── menuService.js                    ← Interactive menu builder
-├── normalizer.js                     ← Inbound message normalizer
+├── mediaService.js                   ← Cloudinary media upload & brochure attachments
+├── menuService.js                    ← Interactive menu builder & traversal
+├── normalizer.js                     ← Universal inbound message normalizer
 ├── noteService.js
 ├── onboardingService.js
-├── otpService.js
+├── otpService.js                     ← Redis/DB OTP generation & verification
 ├── sessionService.js
 ├── subscriptionService.js
+├── teamService.js
+├── telegramService.js                ← Live Telegram Bot polling & outbound dispatch
 ├── templateService.js
 └── widgetService.js
 ```
 
 ---
 
-### Sockets
+### Sockets (5 files)
 
-```
+```text
 src/sockets/
 ├── analyticsSocket.js                ← Real-time analytics push
-├── authSocket.js                     ← Socket auth middleware
+├── authSocket.js                     ← Socket JWT auth middleware
 ├── conversationSocket.js             ← Conversation/message socket events
 ├── events.js                         ← Socket event name constants
 └── index.js                          ← Socket.io server initialization
@@ -265,16 +284,21 @@ src/sockets/
 
 ---
 
-### Utils
+### Utils (13 files)
 
-```
+```text
 src/utils/
+├── audit.js                          ← Security audit logger
+├── cache.js                          ← Redis / L1 memory cache helper
 ├── constants.js                      ← App-wide enums (ROLES, PLATFORMS, etc.)
+├── errors.js                         ← Custom AppError classes
 ├── helpers.js                        ← formatResponse, generateUUID, sanitizeString
 ├── jwt.js                            ← signToken, verifyToken, signRefreshToken, verifyRefreshToken
 ├── leadParsing.js                    ← parseLeadTags, computeLeadScore
 ├── logger.js                         ← Winston logger
+├── pagination.js                     ← Standard pagination helper
 ├── password.js                       ← hashPassword, comparePassword, validatePasswordStrength
+├── retry.js                          ← Exponential backoff retry utility
 ├── security.js                       ← generateOTP, generateBackupCode, generateBackupCodes, hashString
 └── socketEvents.js                   ← Socket.io event name map
 ```
@@ -283,7 +307,7 @@ src/utils/
 
 ### Validators (18 files)
 
-```
+```text
 src/validators/
 ├── agentValidator.js
 ├── aiContextValidator.js
@@ -307,144 +331,29 @@ src/validators/
 
 ---
 
-## Tests (`tests/`)
+## Tests (`tests/` — 74 Suites)
 
-### Unit Tests — Services (24 files)
-
-```
-tests/unit/services/
-├── agentService.test.js
-├── aiContextService.test.js
-├── aiService.test.js
-├── analyticsService.test.js
-├── approvalService.test.js
-├── authService.test.js
-├── billingService.test.js
-├── businessHoursService.test.js
-├── cannedResponseService.test.js
-├── channelService.test.js
-├── dispatcher.test.js
-├── emailService.test.js
-├── leadExtractor.test.js
-├── leadParsingService.test.js
-├── mediaService.test.js
-├── menuService.test.js
-├── normalizer.test.js
-├── noteService.test.js
-├── onboardingService.test.js
-├── otpService.test.js
-├── sessionService.test.js
-├── subscriptionService.test.js
-├── templateService.test.js
-└── widgetService.test.js
-```
-
-### Unit Tests — Controllers (18 files)
-
-```
-tests/unit/controllers/
-├── agentController.test.js
-├── aiContextController.test.js
-├── aiController.test.js
-├── analyticsController.test.js
-├── approvalController.test.js
-├── authController.test.js
-├── billingController.test.js
-├── businessHoursController.test.js
-├── cannedResponseController.test.js
-├── channelController.test.js
-├── conversationController.test.js
-├── leadController.test.js
-├── messageController.test.js
-├── noteController.test.js
-├── onboardingController.test.js
-├── subscriptionController.test.js
-├── templateController.test.js
-└── widgetController.test.js
-```
-
-### Unit Tests — Utils (5 files)
-
-```
-tests/unit/utils/
-├── helpers.test.js
-├── jwt.test.js
-├── leadParsing.test.js
-├── password.test.js
-└── security.test.js
-```
-
-### Integration Tests (19 files)
-
-```
-tests/integration/
-├── agent.test.js
-├── ai.test.js
-├── aiContext.test.js
-├── analytics.test.js
-├── approval.test.js
-├── auth.test.js
-├── billing.test.js
-├── businessHours.test.js
-├── cannedResponse.test.js
-├── channel.test.js
-├── conversation.test.js
-├── lead.test.js
-├── message.test.js
-├── note.test.js
-├── onboarding.test.js
-├── subscription.test.js
-├── template.test.js
-├── webhook.test.js
-└── widget.test.js
-```
-
-### E2E Tests (8 files)
-
-```
-tests/e2e/
-├── analytics-flow.test.js
-├── approval-flow.test.js
-├── auth-flow.test.js
-├── conversation-flow.test.js
-├── dashboard-flow.test.js
-├── onboarding-flow.test.js
-├── otp-flow.test.js
-└── webhook-flow.test.js
-```
+- **Unit Tests — Services:** 24 files (`tests/unit/services/*.test.js`)
+- **Unit Tests — Controllers:** 18 files (`tests/unit/controllers/*.test.js`)
+- **Unit Tests — Utils:** 5 files (`tests/unit/utils/*.test.js`)
+- **Integration Tests:** 19 files (`tests/integration/*.test.js`)
+- **E2E Tests:** 8 files (`tests/e2e/*.test.js`)
 
 ---
 
-## Test Suite Summary
+## File Counts Summary (`src/`)
 
-| Category              | Suites | Tests |
-|-----------------------|--------|-------|
-| Unit — Services       | 24     | 24    |
-| Unit — Controllers    | 18     | 18    |
-| Unit — Utils          | 5      | 13    |
-| Integration           | 19     | 20    |
-| E2E                   | 8      | 8     |
-| **Total**             | **74** | **84**|
-
-> All 74 suites passing. Run with:
-> ```bash
-> node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests
-> ```
-
----
-
-## File Counts Summary
-
-| Layer         | Files |
-|---------------|-------|
-| Config        | 6     |
-| Controllers   | 18    |
-| Jobs          | 5     |
-| Middleware    | 9     |
-| Models        | 21    |
-| Routes        | 25    |
-| Services      | 25    |
-| Sockets       | 5     |
-| Utils         | 8     |
-| Validators    | 18    |
-| **Total src** | **140** |
+| Layer | Files |
+| :--- | :--- |
+| Entry Points (`app.js`, `server.js`) | 2 |
+| Config (`src/config/`) | 8 |
+| Controllers (`src/controllers/`) | 21 |
+| Jobs (`src/jobs/`) | 5 |
+| Middleware (`src/middleware/`) | 12 |
+| Models (`src/models/`) | 23 |
+| Routes (`src/routes/`) | 28 |
+| Services (`src/services/`) | 29 |
+| Sockets (`src/sockets/`) | 5 |
+| Utils (`src/utils/`) | 13 |
+| Validators (`src/validators/`) | 18 |
+| **Total `src/` Files** | **164** |
