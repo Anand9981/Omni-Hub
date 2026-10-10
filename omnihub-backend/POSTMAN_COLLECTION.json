@@ -1,0 +1,174 @@
+{
+  "info": {
+    "_postman_id": "omnihub-api-collection-2026",
+    "name": "OmniHub API Engine",
+    "description": "Postman Collection for OmniHub Multiplatform Messaging & Automation Hub",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.success && jsonData.data.token) {",
+              "    pm.collectionVariables.set('token', jsonData.data.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@omnihub.io\",\n  \"password\": \"Password@123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Get Current User Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me"]
+        }
+      }
+    },
+    {
+      "name": "Conversations - List All",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/conversations?page=1&limit=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "conversations"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "20" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Approvals - List Pending",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/approvals",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "approvals"]
+        }
+      }
+    },
+    {
+      "name": "Leads - List CRM Leads",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/leads",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "leads"]
+        }
+      }
+    },
+    {
+      "name": "Analytics - Daily Volume",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/analytics",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "analytics"]
+        }
+      }
+    },
+    {
+      "name": "AI - Polish Draft",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"bhai aaj office band hai kal aao\",\n  \"tone\": \"Professional\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ai/polish",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "ai", "polish"]
+        }
+      }
+    },
+    {
+      "name": "Webhooks - Telegram Inbound Update",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"update_id\": 10001,\n  \"message\": {\n    \"chat\": { \"id\": 123456 },\n    \"from\": { \"first_name\": \"Demo\", \"username\": \"demouser\" },\n    \"text\": \"Hello from Postman Telegram simulation\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/webhooks/telegram",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "webhooks", "telegram"]
+        }
+      }
+    }
+  ]
+}
+

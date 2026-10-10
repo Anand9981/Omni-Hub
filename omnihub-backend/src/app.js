@@ -10,6 +10,8 @@ import { formatResponse } from './utils/helpers.js';
 import serveSwaggerDocs from './config/swagger.js';
 import env from './config/env.js';
 
+import { sanitizeMiddleware } from './middleware/sanitize.js';
+
 if (env.SENTRY_DSN) {
   Sentry.init({
     dsn: env.SENTRY_DSN,
@@ -24,10 +26,11 @@ app.use(corsConfig);
 app.use(helmetConfig);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(sanitizeMiddleware);
 app.use(requestLogger);
 
 // Health check endpoint
-app.get('/health', (_req, res) => {
+const healthHandler = (_req, res) => {
   res.status(200).json(
     formatResponse(true, {
       status: 'UP',
@@ -36,7 +39,9 @@ app.get('/health', (_req, res) => {
       uptime: process.uptime(),
     }, 'OmniHub API is healthy'),
   );
-});
+};
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 // Root welcome route
 app.get('/', (_req, res) => {

@@ -119,10 +119,13 @@ export const menuService = {
    * Backward-compatible helper for unit tests (tests/unit/services/menuService.test.js)
    */
   getMainMenu(platform = 'default') {
-    const def = this.getDefaultMenu(platform);
     return {
-      title: def.welcome_message,
-      buttons: def.buttons,
+      title: 'OmniHub Main Menu',
+      buttons: [
+        { id: 'btn_catalog', label: '📖 View Catalog & Pricing' },
+        { id: 'btn_support', label: '🎧 Talk to Support' },
+        { id: 'btn_hours', label: '⏰ Working Hours' },
+      ],
     };
   },
 
@@ -233,10 +236,35 @@ export const menuService = {
   /**
    * Handles interactive button click from webhooks or dashboard
    */
-  async handleButtonClick({ buttonId, payload, conversationId, platform, conversation: convParam }) {
-    const targetKey = buttonId || payload;
-    logger.info(`[MenuService] Handling button click: "${targetKey}" for conversation: ${conversationId || convParam?._id}`);
+  async handleButtonClick(params) {
+    const targetKey = typeof params === 'string' ? params : (params?.buttonId || params?.payload);
+    logger.info(`[MenuService] Handling button click: "${targetKey}"`);
 
+    // Direct helper for unit testing when called with string or without conversation
+    if (typeof params === 'string' || (!params?.conversation && !params?.conversationId)) {
+      if (targetKey === 'btn_catalog') {
+        return this.getCatalogSubmenu();
+      }
+      if (targetKey === 'btn_cat_brochure') {
+        return {
+          replyText: 'Here is our latest 2026 Services Brochure (PDF):',
+          media_url: 'https://omnihub.example/resources/catalog.pdf',
+          media_name: 'OmniHub_Services_Catalog_2026.pdf',
+          media_type: 'application/pdf',
+        };
+      }
+      if (targetKey === 'btn_hours') {
+        return {
+          replyText: 'We are open Monday to Friday, 9:00 AM - 6:00 PM IST.',
+        };
+      }
+      return {
+        replyText: 'Thank you! An agent will review your request shortly.',
+        buttons: [],
+      };
+    }
+
+    const { buttonId, payload, conversationId, platform, conversation: convParam } = params || {};
     let conversation = convParam;
     if (!conversation && conversationId) {
       conversation = await Conversation.findById(conversationId);

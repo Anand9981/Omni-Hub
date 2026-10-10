@@ -171,8 +171,19 @@ export const authService = {
     }
 
     const newToken = signToken({ userId: user._id, role: user.role, email: user.email });
-    return { token: newToken };
+    return { token: newToken, accessToken: newToken };
   },
 };
+
+export const {
+  register,
+  login,
+  verify2FA,
+  verifyBackupCode,
+  changePassword,
+  setup2FA,
+  regenerateBackupCodes,
+  refreshAuthToken,
+} = authService;
 
 export default authService;

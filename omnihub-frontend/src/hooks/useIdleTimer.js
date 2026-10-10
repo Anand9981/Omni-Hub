@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { authService } from '../services/authDemoService.js';
 
-// 40 hours inactivity timeout
-const IDLE_TIMEOUT = 40 * 60 * 60 * 1000;
+// 30 minutes inactivity timeout
+const IDLE_TIMEOUT = 30 * 60 * 1000;
 
 export default function useIdleTimer(onIdle) {
   useEffect(() => {

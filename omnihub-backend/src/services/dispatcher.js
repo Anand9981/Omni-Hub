@@ -9,7 +9,7 @@ export const dispatcher = {
   async sendTelegramMessage(chatId, text, buttons = []) {
     if (!env.TELEGRAM_BOT_TOKEN || env.TELEGRAM_BOT_TOKEN === 'demo_telegram_token') {
       logger.info(`[Dispatcher Mock Telegram] (${chatId}): "${text?.slice(0, 30)}"`);
-      return { success: true, status: MESSAGE_STATUS.DELIVERED };
+      return { success: true, status: MESSAGE_STATUS.DELIVERED, delivered_at: new Date() };
     }
 
     try {
@@ -31,7 +31,7 @@ export const dispatcher = {
       const data = await response.json();
       if (data.ok) {
         logger.info(`[Dispatcher Telegram Live] Delivered to ${chatId}: "${text?.slice(0, 30)}"`);
-        return { success: true, status: MESSAGE_STATUS.DELIVERED, raw: data };
+        return { success: true, status: MESSAGE_STATUS.DELIVERED, delivered_at: new Date(), raw: data };
       }
       throw new Error(data.description || 'Telegram API failure');
     } catch (err) {
@@ -46,7 +46,7 @@ export const dispatcher = {
   async sendWhatsAppMessage(recipientPhone, text) {
     if (!env.WHATSAPP_ACCESS_TOKEN || !env.WHATSAPP_PHONE_NUMBER_ID) {
       logger.info(`[Dispatcher Mock WhatsApp] (${recipientPhone}): "${text?.slice(0, 30)}"`);
-      return { success: true, status: MESSAGE_STATUS.DELIVERED };
+      return { success: true, status: MESSAGE_STATUS.DELIVERED, delivered_at: new Date() };
     }
 
     try {
@@ -68,7 +68,7 @@ export const dispatcher = {
       const data = await response.json();
       if (data.messages && data.messages.length > 0) {
         logger.info(`[Dispatcher WhatsApp Live] Delivered to ${recipientPhone}: "${text?.slice(0, 30)}"`);
-        return { success: true, status: MESSAGE_STATUS.DELIVERED, raw: data };
+        return { success: true, status: MESSAGE_STATUS.DELIVERED, delivered_at: new Date(), raw: data };
       }
       throw new Error(data.error?.message || 'WhatsApp API failure');
     } catch (err) {

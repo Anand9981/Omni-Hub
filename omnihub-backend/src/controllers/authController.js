@@ -33,6 +33,9 @@ export const authController = {
         formatResponse(true, result, result.requires2FA ? '2FA verification code sent.' : 'Login successful.'),
       );
     } catch (error) {
+      if (error.message === 'Invalid email or password.' || error.message.includes('suspended')) {
+        error.statusCode = HTTP_STATUS.UNAUTHORIZED;
+      }
       next(error);
     }
   },

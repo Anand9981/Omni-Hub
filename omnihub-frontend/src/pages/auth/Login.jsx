@@ -30,7 +30,7 @@ export default function Login() {
       <div className="eyebrow"><span className="eyebrow-icon"><LockKeyhole size={15} /></span> YOUR WORKSPACE AWAITS</div>
       <h2>Welcome back</h2><p className="auth-subtitle">Sign in to pick up right where you left off.</p>
       {location.state?.registered && <div className="alert alert--success">Email verified. Your account is ready—sign in to continue.</div>}
-      {location.state?.sessionExpired && <div className="alert alert--error" role="alert">You were signed out after 40 hours of inactivity. Please sign in again.</div>}
+      {location.state?.sessionExpired && <div className="alert alert--error" role="alert">You were signed out after 30 minutes of inactivity. Please sign in again.</div>}
       {error && <div className="alert alert--error" role="alert">{error}</div>}
       <form className="auth-form" onSubmit={handleSubmit}>
         <div className="field"><label htmlFor="email">Work email</label><input autoComplete="email" id="email" onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" required type="email" value={email} /></div>

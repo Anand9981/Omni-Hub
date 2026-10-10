@@ -16,5 +16,13 @@ export async function connectDB() {
   }
 }
 
-export default connectDB;
+export async function disconnectDB() {
+  try {
+    await mongoose.disconnect();
+    console.log('[Database] MongoDB disconnected cleanly.');
+  } catch (error) {
+    console.warn(`[Database] Error disconnecting: ${error.message}`);
+  }
+}
 
+export default connectDB;
