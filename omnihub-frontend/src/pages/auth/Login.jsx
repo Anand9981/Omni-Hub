@@ -32,6 +32,22 @@ export default function Login() {
       {location.state?.registered && <div className="alert alert--success">Email verified. Your account is ready—sign in to continue.</div>}
       {location.state?.sessionExpired && <div className="alert alert--error" role="alert">You were signed out after 30 minutes of inactivity. Please sign in again.</div>}
       {error && <div className="alert alert--error" role="alert">{error}</div>}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => { setEmail('parmanandsahu2005@gmail.com'); setPassword('Password@123'); }}
+          style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f1f5f9', cursor: 'pointer', fontWeight: 600, color: '#1e293b' }}
+        >
+          👤 Parmanand Sahu
+        </button>
+        <button
+          type="button"
+          onClick={() => { setEmail('admin@omnihub.io'); setPassword('Password@123'); }}
+          style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f1f5f9', cursor: 'pointer', fontWeight: 600, color: '#1e293b' }}
+        >
+          ⚡ Super Admin
+        </button>
+      </div>
       <form className="auth-form" onSubmit={handleSubmit}>
         <div className="field"><label htmlFor="email">Work email</label><input autoComplete="email" id="email" onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" required type="email" value={email} /></div>
         <PasswordInput id="password" label="Password" onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" required value={password} />

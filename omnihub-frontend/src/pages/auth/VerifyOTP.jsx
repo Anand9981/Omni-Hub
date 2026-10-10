@@ -48,7 +48,29 @@ export default function VerifyOTP() {
               value={code}
             />
           </div>
-        ) : <OTPInput onChange={setCode} value={code} />}
+        ) : (
+          <>
+            <OTPInput onChange={setCode} value={code} />
+            <button
+              type="button"
+              onClick={() => setCode('123456')}
+              style={{
+                marginTop: '8px',
+                padding: '4px 8px',
+                fontSize: '12px',
+                background: '#e0f2fe',
+                color: '#0369a1',
+                border: '1px solid #bae6fd',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                alignSelf: 'center',
+              }}
+            >
+              ⚡ Auto-fill Demo OTP (123456)
+            </button>
+          </>
+        )}
         <label className="checkbox-label otp-trust-device">
           <input checked={rememberDevice} onChange={(event) => setRememberDevice(event.target.checked)} type="checkbox" />
           <span>Remember this device after verification</span>
