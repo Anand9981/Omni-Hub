@@ -11,8 +11,8 @@ function getTransporter() {
       port: Number(env.SMTP_PORT) || 587,
       secure: Number(env.SMTP_PORT) === 465,
       auth: {
-        user: env.SMTP_USER,
-        pass: env.SMTP_PASS,
+        user: env.SMTP_USER.trim(),
+        pass: env.SMTP_PASS.replace(/\s+/g, ''),
       },
     });
   }
