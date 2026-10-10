@@ -1,3 +1,5 @@
+import api from '../api/axios.js';
+
 const STORAGE_KEY = 'omnihub.demo.clientOnboarding';
 const CHANNELS = ['telegram', 'discord', 'whatsapp', 'instagram', 'webchat', 'linkedin'];
 
@@ -52,13 +54,26 @@ function readState() {
     };
   } catch (error) {
     console.error('Could not read client onboarding progress.', error);
-    throw new Error('Onboarding progress could not be loaded. Refresh the page to retry.');
+    return clone(DEFAULT_ONBOARDING);
   }
 }
 
 function persist(next) {
   const state = { ...next, updatedAt: new Date().toISOString() };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+  api.put('/dashboard/onboarding', {
+    status: state.status,
+    currentStep: state.currentStep,
+    business: state.business,
+    channels: state.channels,
+    knowledge: state.knowledge,
+    invitedAgents: state.invitedAgents,
+    tests: state.tests,
+  }).catch((err) => {
+    console.warn('[onboardingService] Sync onboarding warning:', err.message);
+  });
+
   return clone(state);
 }
 
@@ -74,6 +89,33 @@ function validateFaqs(faqs) {
 
 export const onboardingService = {
   getProgress() {
+    return readState();
+  },
+
+  async fetchProgress() {
+    try {
+      const res = await api.get('/dashboard/onboarding');
+      const data = res.data?.data;
+      if (data) {
+        const local = readState();
+        const merged = {
+          ...local,
+          status: data.status || local.status,
+          currentStep: data.current_step || local.currentStep || 3,
+          business: { ...local.business, ...(data.business || {}) },
+          channels: { ...local.channels, ...(data.channels || {}) },
+          knowledge: { ...local.knowledge, ...(data.knowledge || {}) },
+          invitedAgents: Array.isArray(data.invited_agents) && data.invited_agents.length ? data.invited_agents : local.invitedAgents,
+          tests: { ...local.tests, ...(data.tests || {}) },
+          updatedAt: data.updated_at || local.updatedAt,
+          completedAt: data.completed_at || local.completedAt,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        return merged;
+      }
+    } catch (err) {
+      console.warn('[onboardingService] Fallback to cached onboarding progress:', err.message);
+    }
     return readState();
   },
 

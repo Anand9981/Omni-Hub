@@ -1,7 +1,9 @@
 import { ArrowRight, Clock3, History, KeyRound, Laptop2, MapPin, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TwoFASetupCard from '../../components/auth/TwoFASetupCard.jsx';
+import { useAuth } from '../../hooks/useAuth.js';
 import { authService } from '../../services/authDemoService.js';
+import { formatDate } from '../../utils/formatters.js';
 
 const workspaceRoles = [
   ['Super Admin', 'Full system access'],
@@ -11,8 +13,8 @@ const workspaceRoles = [
 ];
 
 export default function SecurityHome() {
-  const user = authService.getCurrentUser();
-  const sessions = authService.getSessions();
+  const { user: authUser, sessions } = useAuth();
+  const user = authUser || authService.getCurrentUser();
   const loginAudit = authService.getLoginAudit();
   return (
     <div className="page-card security-home">
@@ -50,7 +52,7 @@ export default function SecurityHome() {
             <span className="login-audit-icon"><Laptop2 size={14} /></span>
             <span className="login-audit-details">
               <strong>{entry.device}{entry.trustedDevice && <i>TRUSTED</i>}</strong>
-              <small>{new Date(entry.createdAt).toLocaleString()}</small>
+              <small>{formatDate(entry.createdAt)}</small>
             </span>
             <span className="login-audit-location"><MapPin size={12} /> IP unavailable</span>
           </div>

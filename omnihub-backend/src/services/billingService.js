@@ -53,17 +53,28 @@ export const billingService = {
     return sub;
   },
 
-  async updateSubscription(userId, planId) {
+  async updateSubscription(userId, payload = {}) {
+    const planId = typeof payload === 'string' ? payload : payload.plan_id || payload.selectedPlan || 'basic';
+    const updateFields = {
+      plan_id: planId,
+      status: 'active',
+      current_period_start: new Date(),
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    };
+    if (typeof payload === 'object' && payload !== null) {
+      if (payload.billingCycle || payload.billing_cycle) {
+        updateFields.billing_cycle = payload.billingCycle || payload.billing_cycle;
+      }
+      if (typeof (payload.autoRenew ?? payload.auto_renew) === 'boolean') {
+        updateFields.auto_renew = payload.autoRenew ?? payload.auto_renew;
+      }
+      if (typeof (payload.paymentGateway ?? payload.payment_gateway) === 'string') {
+        updateFields.payment_gateway = payload.paymentGateway ?? payload.payment_gateway;
+      }
+    }
     const sub = await Subscription.findOneAndUpdate(
       { user_id: userId },
-      {
-        $set: {
-          plan_id: planId,
-          status: 'active',
-          current_period_start: new Date(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
-      },
+      { $set: updateFields },
       { upsert: true, new: true },
     );
     logger.info(`[BillingService] User ${userId} upgraded/updated subscription to plan [${planId}]`);

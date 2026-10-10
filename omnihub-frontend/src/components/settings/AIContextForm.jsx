@@ -18,6 +18,9 @@ export default function AIContextForm() {
   useEffect(() => {
     try {
       setContext(aiService.getContext());
+      aiService.fetchContext().then((remote) => {
+        if (remote) setContext(remote);
+      });
     } catch (loadError) {
       setError(loadError.message || 'AI context could not be loaded.');
     } finally {

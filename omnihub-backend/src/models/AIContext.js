@@ -20,8 +20,23 @@ const aiContextSchema = new mongoose.Schema(
     },
     tone: {
       type: String,
-      enum: ['Professional', 'Friendly', 'Casual', 'Direct'],
-      default: 'Friendly',
+      default: 'Professional, friendly, and helpful',
+    },
+    services: {
+      type: String,
+      default: '',
+    },
+    working_hours: {
+      type: String,
+      default: '',
+    },
+    pricing: {
+      type: String,
+      default: '',
+    },
+    asset_links: {
+      type: String,
+      default: '',
     },
     system_instructions: {
       type: String,

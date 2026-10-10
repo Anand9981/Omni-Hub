@@ -1,3 +1,5 @@
+import api from '../api/axios.js';
+
 const STORAGE_KEY = 'omnihub.demo.billingPreferences';
 
 export const SUBSCRIPTION_PLANS = [
@@ -57,6 +59,16 @@ const DEFAULT_PREFERENCES = {
   paymentGateway: '',
 };
 
+const PLAN_MAP_FROM_BACKEND = {
+  starter: 'basic',
+  pro: 'standard',
+  enterprise: 'premium',
+  basic: 'basic',
+  standard: 'standard',
+  premium: 'premium',
+  custom: 'custom',
+};
+
 function readPreferences() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return { ...DEFAULT_PREFERENCES };
@@ -68,12 +80,33 @@ function readPreferences() {
     return { ...DEFAULT_PREFERENCES, ...parsed };
   } catch (error) {
     console.error('Could not read billing preferences.', error);
-    throw new Error('Billing preferences could not be loaded. Refresh the page to retry.');
+    return { ...DEFAULT_PREFERENCES };
   }
 }
 
 export const billingService = {
   getPreferences() {
+    return readPreferences();
+  },
+
+  async fetchPreferences() {
+    try {
+      const res = await api.get('/dashboard/billing/subscription');
+      const data = res.data?.data;
+      if (data) {
+        const mapped = {
+          selectedPlan: PLAN_MAP_FROM_BACKEND[data.plan_id] || 'basic',
+          billingCycle: data.billing_cycle || 'monthly',
+          autoRenew: Boolean(data.auto_renew),
+          paymentGateway: data.payment_gateway || '',
+          updatedAt: data.updated_at || new Date().toISOString(),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+        return mapped;
+      }
+    } catch (err) {
+      console.warn('[billingService] Fallback to cached billing preferences:', err.message);
+    }
     return readPreferences();
   },
 
@@ -91,6 +124,16 @@ export const billingService = {
     }
     const saved = { ...next, updatedAt: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+
+    api.post('/dashboard/billing/subscribe', {
+      plan_id: saved.selectedPlan,
+      billingCycle: saved.billingCycle,
+      autoRenew: saved.autoRenew,
+      paymentGateway: saved.paymentGateway,
+    }).catch((err) => {
+      console.warn('[billingService] Sync subscription warning:', err.message);
+    });
+
     return saved;
   },
 };

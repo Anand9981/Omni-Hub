@@ -15,6 +15,9 @@ export default function Billing() {
   useEffect(() => {
     try {
       setPreferences(billingService.getPreferences());
+      billingService.fetchPreferences().then((remote) => {
+        if (remote) setPreferences(remote);
+      });
       const conversations = conversationService.listConversations();
       setActiveChannels([...new Set(conversations.map((item) => item.platform))]);
       setMessageCount(conversations.reduce((total, item) => total + item.messageCount, 0));

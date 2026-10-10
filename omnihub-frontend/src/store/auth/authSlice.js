@@ -104,3 +104,4 @@ const authSlice = createSlice({
 
 export const { syncCurrentUser, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;
+

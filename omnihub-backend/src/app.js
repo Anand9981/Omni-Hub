@@ -11,6 +11,7 @@ import serveSwaggerDocs from './config/swagger.js';
 import env from './config/env.js';
 
 import { sanitizeMiddleware } from './middleware/sanitize.js';
+import { httpsEnforceMiddleware } from './middleware/httpsEnforce.js';
 
 if (env.SENTRY_DSN) {
   Sentry.init({
@@ -22,6 +23,7 @@ if (env.SENTRY_DSN) {
 const app = express();
 
 // Global Security & Middleware
+app.use(httpsEnforceMiddleware);
 app.use(corsConfig);
 app.use(helmetConfig);
 app.use(express.json({ limit: '10mb' }));

@@ -31,6 +31,15 @@ export const onboardingController = {
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(formatResponse(false, null, error.message));
     }
   },
+
+  async updateProgress(req, res) {
+    try {
+      const progress = await onboardingService.updateProgress(req.user._id, req.body);
+      return res.status(HTTP_STATUS.OK).json(formatResponse(true, progress, 'Onboarding progress updated.'));
+    } catch (error) {
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(formatResponse(false, null, error.message));
+    }
+  },
 };
 
 export default onboardingController;

@@ -381,11 +381,17 @@ Rules:
   async polishDraft({ text, tone = 'Professional' }) {
     if (!text) return '';
 
-    const prompt = `Rewrite and polish the following customer service message to make it ${tone}, clear, and courteous. Keep the core meaning intact:\n\n"${text}"`;
+    const prompt = `Rewrite and polish the following rough customer service draft to make it ${tone}, clear, and courteous while keeping the exact meaning intact.
+IMPORTANT RULES:
+- Return ONLY the single final rewritten message text.
+- Do NOT provide multiple options, bullet points, explanations, or markdown formatting.
+- Do NOT wrap the response in quotation marks.
+
+Draft: ${text}`;
     const result = await callGemini(prompt);
 
     if (result?.text) {
-      return result.text;
+      return result.text.replace(/^["']|["']$/g, '').trim();
     }
 
     return text.trim().replace(/^./, (c) => c.toUpperCase());

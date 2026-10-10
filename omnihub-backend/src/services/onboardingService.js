@@ -46,6 +46,37 @@ export const onboardingService = {
     await progress.save();
     return progress;
   },
+
+  async updateProgress(userId, updates = {}) {
+    const progress = await this.getProgress(userId);
+    if (updates.status) progress.status = updates.status;
+    if (typeof (updates.currentStep ?? updates.current_step) === 'number') {
+      progress.current_step = updates.currentStep ?? updates.current_step;
+    }
+    if (updates.business) {
+      progress.business = { ...(progress.business?.toObject?.() || progress.business || {}), ...updates.business };
+    }
+    if (updates.channels) {
+      progress.channels = { ...(progress.channels || {}), ...updates.channels };
+      progress.markModified('channels');
+    }
+    if (updates.knowledge) {
+      progress.knowledge = { ...(progress.knowledge || {}), ...updates.knowledge };
+      progress.markModified('knowledge');
+    }
+    if (Array.isArray(updates.invitedAgents || updates.invited_agents)) {
+      progress.invited_agents = updates.invitedAgents || updates.invited_agents;
+    }
+    if (updates.tests) {
+      progress.tests = { ...(progress.tests || {}), ...updates.tests };
+      progress.markModified('tests');
+    }
+    if (updates.status === 'completed') {
+      progress.completed_at = new Date();
+    }
+    await progress.save();
+    return progress;
+  },
 };
 
 export default onboardingService;

@@ -29,3 +29,4 @@ export function usePasswordStrength(password = '') {
 }
 
 export default usePasswordStrength;
+

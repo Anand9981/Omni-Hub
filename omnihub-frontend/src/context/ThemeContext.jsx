@@ -1,35 +1,34 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
+import { useLocalStorage } from '../hooks/useLocalStorage.js';
+import { useMediaQuery } from '../hooks/useMediaQuery.js';
 
 const THEME_STORAGE_KEY = 'omnihub.theme';
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState(() => {
-    try {
-      return localStorage.getItem(THEME_STORAGE_KEY) || 'light';
-    } catch {
-      return 'light';
-    }
-  });
+  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+  const [theme, setThemeState] = useLocalStorage(THEME_STORAGE_KEY, prefersDark ? 'dark' : 'light');
 
   useEffect(() => {
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('data-theme', theme);
       }
     } catch {
-      // Ignore storage access errors in restricted browsing modes
+      // Ignore DOM errors in non-browser environments
     }
   }, [theme]);
 
-  const setTheme = useCallback((nextTheme) => {
-    setThemeState(nextTheme === 'dark' ? 'dark' : 'light');
-  }, []);
+  const setTheme = useCallback(
+    (nextTheme) => {
+      setThemeState(nextTheme === 'dark' ? 'dark' : 'light');
+    },
+    [setThemeState],
+  );
 
   const toggleTheme = useCallback(() => {
     setThemeState((current) => (current === 'dark' ? 'light' : 'dark'));
-  }, []);
+  }, [setThemeState]);
 
   const value = useMemo(
     () => ({

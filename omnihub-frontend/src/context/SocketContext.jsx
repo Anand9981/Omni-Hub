@@ -4,6 +4,7 @@ import { applyDeliveryReceipt, receiveMessage, setTyping } from '../store/messag
 import { loadApprovals, receivePending } from '../store/approvalSlice.js';
 import { loadConversations, openConversation, syncFromStore } from '../store/conversationSlice.js';
 import { DIRECTION, MESSAGE_STATUS, SENDER_TYPE } from '../utils/constants.js';
+import { SOCKET_EVENTS } from '../utils/socketEvents.js';
 import { approvalService } from '../services/approvalService.js';
 import { conversationService } from '../services/conversationService.js';
 import { loadLeads } from '../store/leadSlice.js';

@@ -23,9 +23,12 @@ export const billingController = {
 
   async updateSubscription(req, res) {
     try {
-      const { plan_id } = req.body;
-      const updated = await billingService.updateSubscription(req.user._id, plan_id);
-      return res.status(HTTP_STATUS.OK).json(formatResponse(true, updated, `Subscription updated to ${plan_id}.`));
+      const planId = req.body.plan_id || req.body.selectedPlan || 'basic';
+      const updated = await billingService.updateSubscription(req.user._id, {
+        ...req.body,
+        plan_id: planId,
+      });
+      return res.status(HTTP_STATUS.OK).json(formatResponse(true, updated, `Subscription updated to ${planId}.`));
     } catch (error) {
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(formatResponse(false, null, error.message));
     }

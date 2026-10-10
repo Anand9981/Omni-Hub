@@ -171,23 +171,79 @@ export const aiService = {
     return readContext();
   },
 
+  async fetchContext() {
+    try {
+      const res = await api.get('/dashboard/ai-context');
+      const data = res.data?.data;
+      if (data) {
+        const local = readContext();
+        const merged = {
+          ...local,
+          businessName: data.business_name || local.businessName,
+          tone: data.tone || local.tone,
+          services: data.services || local.services,
+          workingHours: data.working_hours || local.workingHours,
+          pricing: data.pricing || local.pricing,
+          assetLinks: data.asset_links || local.assetLinks,
+          updatedAt: data.updated_at || local.updatedAt,
+        };
+        localStorage.setItem(CONTEXT_KEY, JSON.stringify(merged));
+        return merged;
+      }
+    } catch (err) {
+      console.warn('[AI Service] Fallback to local AI context:', err.message);
+    }
+    return readContext();
+  },
+
   saveContext(context) {
     const validated = validateContext(context);
     localStorage.setItem(CONTEXT_KEY, JSON.stringify(validated));
+
+    api.patch('/dashboard/ai-context', {
+      business_name: validated.businessName,
+      tone: validated.tone,
+      services: validated.services,
+      working_hours: validated.workingHours,
+      pricing: validated.pricing,
+      asset_links: validated.assetLinks,
+    }).catch((err) => {
+      console.warn('[AI Service] Sync AI context warning:', err.message);
+    });
+
     return structuredClone(validated);
   },
 
-  polish(draft, { language = 'auto' } = {}) {
+  async polish(draft, { language = 'auto' } = {}) {
     const raw = String(draft || '').trim();
     if (!raw) throw new Error('Write a rough note first, then polish it.');
     if (!AI_LANGUAGE_OPTIONS.some((option) => option.id === language)) {
       throw new Error('Choose a supported response language.');
     }
     const detectedLanguage = detectLanguage(raw);
-    if (language !== 'auto' && language !== detectedLanguage) {
-      throw new Error('The local demo polishes a draft in its detected language. Cross-language rewriting needs a connected AI provider.');
-    }
     const targetLanguage = language === 'auto' ? detectedLanguage : language;
+
+    try {
+      const res = await api.post('/ai/polish', {
+        text: raw,
+        tone: `Professional, polite ${targetLanguage}`,
+      });
+      const remotePolished = res.data?.data?.polishedText;
+      if (remotePolished) {
+        return {
+          polished_text: remotePolished,
+          detected_language: detectedLanguage,
+          response_language: targetLanguage,
+          original: raw,
+          requires_review: true,
+          demo: false,
+          demo_notice: 'Polished live using Google Gemini 2.5 Flash.',
+        };
+      }
+    } catch (err) {
+      console.warn('[AI Service] Live Gemini polish fallback:', err.message);
+    }
+
     return {
       polished_text: polishedText(raw, targetLanguage),
       detected_language: detectedLanguage,
@@ -195,7 +251,7 @@ export const aiService = {
       original: raw,
       requires_review: true,
       demo: true,
-      demo_notice: 'Local tone refinement only; a connected AI provider is required for full language generation.',
+      demo_notice: 'Local tone refinement fallback.',
     };
   },
 

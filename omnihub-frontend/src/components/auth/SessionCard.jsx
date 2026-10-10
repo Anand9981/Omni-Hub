@@ -43,3 +43,4 @@ export default function SessionCard({ session, isCurrent = false, onRevoke }) {
     </div>
   );
 }
+

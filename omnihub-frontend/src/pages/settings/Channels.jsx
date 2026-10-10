@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight, Bot, Check, ChevronDown, CircleHelp, Code2, ExternalLink,
   Globe2, Instagram, KeyRound, MessageCircle, MessageSquare, Radio,
   ShieldCheck, Sparkles, UsersRound, Webhook,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import api from '../../api/axios.js';
+import { useDebounce } from '../../hooks/useDebounce.js';
 
 const CHANNEL_GUIDES = [
   {
@@ -154,14 +156,31 @@ const CHANNEL_GUIDES = [
 export default function Channels() {
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState('telegram');
+  const [liveStatusMap, setLiveStatusMap] = useState({});
+
+  useEffect(() => {
+    api.get('/dashboard/channels').then((res) => {
+      const list = res.data?.data;
+      if (Array.isArray(list)) {
+        const map = {};
+        list.forEach((ch) => {
+          map[ch.platform] = Boolean(ch.is_connected);
+        });
+        setLiveStatusMap(map);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const debouncedQuery = useDebounce(query, 150);
+
   const filteredGuides = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = debouncedQuery.trim().toLowerCase();
     if (!normalizedQuery) return CHANNEL_GUIDES;
     return CHANNEL_GUIDES.filter((guide) => [
       guide.name, guide.category, guide.availability, guide.source,
       guide.credentials, guide.steps.join(' '), guide.webhook || '',
     ].join(' ').toLowerCase().includes(normalizedQuery));
-  }, [query]);
+  }, [debouncedQuery]);
   const selectedGuide = filteredGuides.find((guide) => guide.id === selectedId) || filteredGuides[0];
   const SelectedGuideIcon = selectedGuide?.icon;
 
@@ -191,10 +210,11 @@ export default function Channels() {
           <div className="channel-guide-items">
             {filteredGuides.map((guide) => {
               const Icon = guide.icon;
+              const isConnected = liveStatusMap[guide.id] || guide.id === 'gemini';
               return (
                 <button aria-current={selectedGuide?.id === guide.id ? 'page' : undefined} className={`channel-guide-item${selectedGuide?.id === guide.id ? ' is-active' : ''}`} key={guide.id} onClick={() => setSelectedId(guide.id)} type="button">
                   <span className={`channel-guide-icon channel-guide-icon--${guide.accent}`}><Icon size={17} /></span>
-                  <span><strong>{guide.name}</strong><small>{guide.availability}</small></span>
+                  <span><strong>{guide.name}</strong><small>{isConnected ? `🟢 Connected · ${guide.availability}` : guide.availability}</small></span>
                   <ChevronDown size={14} />
                 </button>
               );
@@ -209,7 +229,7 @@ export default function Channels() {
             <header>
               <span className={`channel-guide-icon channel-guide-icon--${selectedGuide.accent}`}><SelectedGuideIcon size={20} /></span>
               <div><span className="channel-guide-eyebrow">{selectedGuide.category} · SETUP GUIDE</span><h3>{selectedGuide.name}</h3></div>
-              <span className={`channel-guide-status${selectedGuide.id === 'linkedin' ? ' is-future' : ''}`}>{selectedGuide.availability}</span>
+              <span className={`channel-guide-status${selectedGuide.id === 'linkedin' ? ' is-future' : ''}`}>{(liveStatusMap[selectedGuide.id] || selectedGuide.id === 'gemini') ? `Connected · ${selectedGuide.availability}` : selectedGuide.availability}</span>
             </header>
 
             <div className="channel-guide-facts">

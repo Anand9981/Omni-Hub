@@ -56,6 +56,9 @@ export default function OnboardingWizard() {
       } else {
         setProgress(stored);
       }
+      onboardingService.fetchProgress().then((remote) => {
+        if (remote) setProgress(remote);
+      });
     } catch (loadError) {
       setError(loadError.message || 'Setup progress could not be loaded.');
     } finally {

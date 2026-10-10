@@ -12,6 +12,9 @@ export default function Subscription() {
   useEffect(() => {
     try {
       setPreferences(billingService.getPreferences());
+      billingService.fetchPreferences().then((remote) => {
+        if (remote) setPreferences(remote);
+      });
       const conversations = conversationService.listConversations();
       setUsage({
         messages: conversations.reduce((total, item) => total + item.messageCount, 0),

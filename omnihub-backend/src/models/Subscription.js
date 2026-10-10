@@ -31,6 +31,18 @@ const subscriptionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    billing_cycle: {
+      type: String,
+      default: 'monthly',
+    },
+    auto_renew: {
+      type: Boolean,
+      default: false,
+    },
+    payment_gateway: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

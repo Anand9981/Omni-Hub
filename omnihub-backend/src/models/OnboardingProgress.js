@@ -11,16 +11,16 @@ const onboardingProgressSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['in_progress', 'completed'],
+      enum: ['not_started', 'in_progress', 'skipped', 'completed'],
       default: 'in_progress',
     },
     current_step: {
       type: Number,
-      default: 1,
+      default: 3,
     },
     completed_steps: {
       type: [Number],
-      default: [],
+      default: [1, 2],
     },
     checklist: {
       business_info: { type: Boolean, default: false },
@@ -28,6 +28,31 @@ const onboardingProgressSchema = new mongoose.Schema(
       knowledge_base: { type: Boolean, default: false },
       team_invited: { type: Boolean, default: false },
       test_message_sent: { type: Boolean, default: false },
+    },
+    business: {
+      name: { type: String, default: '' },
+      industry: { type: String, default: '' },
+      hours: { type: String, default: '' },
+    },
+    channels: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    knowledge: {
+      type: mongoose.Schema.Types.Mixed,
+      default: { text: '', language: 'English', websiteUrl: '', files: [], faqs: [] },
+    },
+    invited_agents: {
+      type: [String],
+      default: [],
+    },
+    tests: {
+      type: mongoose.Schema.Types.Mixed,
+      default: { message: false, aiReply: false, menu: false, approval: false, analytics: false },
+    },
+    completed_at: {
+      type: Date,
+      default: null,
     },
   },
   {
