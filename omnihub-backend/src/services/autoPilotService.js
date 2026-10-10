@@ -1,4 +1,4 @@
-import { Conversation, Message, PendingApproval } from '../models/index.js';
+import { Conversation, Message, PendingApproval, DailyAnalytics, HourlyAnalytics } from '../models/index.js';
 import { aiService } from './aiService.js';
 import dispatcher from './dispatcher.js';
 import { emitEvent } from '../sockets/index.js';
@@ -161,9 +161,24 @@ export const autoPilotService = {
         status: dispatchResult.status || MESSAGE_STATUS.DELIVERED,
       });
 
-      // 9. Update conversation timestamps
+      // 9. Update conversation timestamps & analytics counters
       conversation.last_activity_at = new Date();
       await conversation.save();
+
+      const today = new Date().toISOString().split('T')[0];
+      const hour = new Date().getHours();
+      Promise.all([
+        DailyAnalytics.findOneAndUpdate(
+          { date: today, platform: conversation.platform },
+          { $inc: { outbound_ai_count: 1 } },
+          { upsert: true },
+        ),
+        HourlyAnalytics.findOneAndUpdate(
+          { date: today, hour, platform: conversation.platform },
+          { $inc: { outbound_count: 1 } },
+          { upsert: true },
+        ),
+      ]).catch(() => {});
 
       // 10. Emit real-time events to all connected clients
       emitEvent('new_message', {

@@ -191,10 +191,15 @@ export const authController = {
 
   async verifyBackupCode(req, res, next) {
     try {
-      const { email, backupCode } = req.body;
+      const { email, backupCode, code } = req.body;
       const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
       const userAgent = req.headers['user-agent'] || 'Unknown Device';
-      const result = await authService.verify2FA({ email, otp: backupCode, isBackupCode: true, ipAddress, userAgent });
+      const result = await authService.verify2FA({
+        email,
+        backupCode: backupCode || code,
+        ipAddress,
+        userAgent,
+      });
       return res.status(HTTP_STATUS.OK).json(formatResponse(true, result, 'Backup code accepted. Authenticated successfully.'));
     } catch (error) {
       next(error);
@@ -224,10 +229,17 @@ export const authController = {
 
   async resetPassword(req, res, next) {
     try {
-      const { email, resetToken, newPassword } = req.body;
-      const verified = otpService.verifyOTP(email, resetToken, 'PASSWORD_RESET');
+      const { email, resetToken, token, newPassword } = req.body;
+      const verified = otpService.verifyOTP(email, resetToken || token, 'PASSWORD_RESET');
       if (!verified || !verified.success) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(formatResponse(false, null, verified?.message || 'Invalid or expired reset token.'));
+      }
+      if (email && newPassword) {
+        const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+        if (user) {
+          user.password = newPassword;
+          await user.save();
+        }
       }
       return res.status(HTTP_STATUS.OK).json(formatResponse(true, null, 'Password reset successful. You can now login.'));
     } catch (error) {
@@ -252,6 +264,17 @@ export const authController = {
       const { currentPassword, newPassword } = req.body;
       if (!currentPassword || !newPassword) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(formatResponse(false, null, 'Current and new password are required.'));
+      }
+      if (req.user?._id) {
+        const user = await User.findById(req.user._id).select('+password');
+        if (user && user.password) {
+          const matches = await user.comparePassword(currentPassword);
+          if (!matches) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json(formatResponse(false, null, 'Current password is incorrect.'));
+          }
+          user.password = newPassword;
+          await user.save();
+        }
       }
       return res.status(HTTP_STATUS.OK).json(formatResponse(true, null, 'Password updated successfully.'));
     } catch (error) {

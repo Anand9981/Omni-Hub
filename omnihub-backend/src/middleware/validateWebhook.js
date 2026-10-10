@@ -50,8 +50,8 @@ export const validateWebhook = {
    * Validates Webchat Widget session / origin.
    */
   websiteWidget(req, res, next) {
-    const { chat_id, session_id } = req.body;
-    if (!chat_id && !session_id) {
+    const { chat_id, session_id, visitor_id, chatId, sessionId, visitorId } = req.body;
+    if (!chat_id && !session_id && !visitor_id && !chatId && !sessionId && !visitorId) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(
         formatResponse(false, null, 'Missing chat_id or session_id in payload.'),
       );

@@ -21,22 +21,27 @@ export function socketAuthMiddleware(socket, next) {
   }
 
   const decoded = verifyToken(token);
-  if (!decoded || !decoded.userId) {
+  const targetUserId = decoded?.userId || decoded?.id;
+  if (!decoded || (!targetUserId && !decoded.email)) {
     logger.warn(`[Socket Auth] Connection rejected — invalid token (${socket.id})`);
     socket.emit(SOCKET_EVENTS.AUTH_ERROR, { message: 'Invalid or expired token' });
     return next(new Error('Invalid or expired token'));
   }
 
   // Attach user id for lazy-loading full user doc only when needed
-  socket.data.userId = decoded.userId;
+  socket.data.userId = targetUserId || decoded.email;
   socket.data.role = decoded.role || null;
 
   // Async user lookup (non-blocking for handshake)
-  User.findById(decoded.userId)
-    .select('-password')
+  const userLookup = targetUserId
+    ? User.findById(targetUserId).select('-password')
+    : User.findOne({ email: decoded.email.toLowerCase() }).select('-password');
+
+  userLookup
     .then((user) => {
       if (user && user.status === 'active') {
         socket.data.user = user;
+        socket.data.userId = String(user._id);
         socket.emit(SOCKET_EVENTS.AUTH_SUCCESS, {
           userId: user._id,
           name: user.name,

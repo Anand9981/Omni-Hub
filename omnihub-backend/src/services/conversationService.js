@@ -166,6 +166,14 @@ export const conversationService = {
         { $inc: { inbound_count: 1 } },
         { upsert: true, new: true },
       );
+
+      emitEvent('analytics_update', {
+        platform,
+        direction: 'INBOUND',
+        date: today,
+        hour,
+        timestamp: new Date().toISOString(),
+      });
     } catch (err) {
       // Ignore in-memory fallback warning
     }

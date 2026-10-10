@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Message, Conversation } from '../models/index.js';
+import { Message, Conversation, DailyAnalytics, HourlyAnalytics } from '../models/index.js';
 import dispatcher from '../services/dispatcher.js';
 import { formatResponse } from '../utils/helpers.js';
 import { HTTP_STATUS, MESSAGE_DIRECTIONS } from '../utils/constants.js';
@@ -64,9 +64,24 @@ export const messageController = {
         status: dispatchResult.status,
       });
 
-      // 3. Update Conversation last activity
+      // 3. Update Conversation last activity & Analytics counters
       conversation.last_activity_at = new Date();
       await conversation.save();
+
+      const today = new Date().toISOString().split('T')[0];
+      const hour = new Date().getHours();
+      Promise.all([
+        DailyAnalytics.findOneAndUpdate(
+          { date: today, platform: conversation.platform },
+          { $inc: { outbound_agent_count: 1 } },
+          { upsert: true },
+        ),
+        HourlyAnalytics.findOneAndUpdate(
+          { date: today, hour, platform: conversation.platform },
+          { $inc: { outbound_count: 1 } },
+          { upsert: true },
+        ),
+      ]).catch(() => {});
 
       // 4. Real-time broadcast
       emitEvent('new_message', {

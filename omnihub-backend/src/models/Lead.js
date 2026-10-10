@@ -52,5 +52,7 @@ const leadSchema = new mongoose.Schema(
   },
 );
 
+leadSchema.index({ full_name: 'text', email_address: 'text', phone_number: 'text' });
+
 export const Lead = mongoose.model('Lead', leadSchema);
 export default Lead;

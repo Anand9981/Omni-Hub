@@ -1,4 +1,4 @@
-import { PendingApproval, Message, Conversation } from '../models/index.js';
+import { PendingApproval, Message, Conversation, DailyAnalytics, HourlyAnalytics } from '../models/index.js';
 import dispatcher from './dispatcher.js';
 import { emitEvent } from '../sockets/index.js';
 import logger from '../utils/logger.js';
@@ -54,9 +54,25 @@ export const approvalService = {
     approval.message_id = message._id;
     await approval.save();
 
-    // 4. Update Conversation last activity
-    conversation.last_activity_at = new Date();
+    // 4. Update Conversation last activity & Analytics counters
+    const now = new Date();
+    conversation.last_activity_at = now;
     await conversation.save();
+
+    const dateStr = now.toISOString().split('T')[0];
+    const hour = now.getHours();
+    await Promise.all([
+      DailyAnalytics.findOneAndUpdate(
+        { date: dateStr, platform: conversation.platform },
+        { $inc: { outbound_ai_count: 1 } },
+        { upsert: true },
+      ),
+      HourlyAnalytics.findOneAndUpdate(
+        { date: dateStr, hour, platform: conversation.platform },
+        { $inc: { outbound_count: 1 } },
+        { upsert: true },
+      ),
+    ]);
 
     // 5. Emit real-time socket events
     emitEvent('new_message', {

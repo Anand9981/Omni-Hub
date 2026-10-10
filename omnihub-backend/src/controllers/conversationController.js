@@ -155,13 +155,24 @@ export const conversationController = {
   async updateApprovalMode(req, res, next) {
     try {
       const { id } = req.params;
-      const { approval_mode } = req.body;
+      const modeVal = (req.body.approval_mode || req.body.mode || 'AUTO').toUpperCase();
 
       const conversation = await Conversation.findByIdAndUpdate(
         id,
-        { approval_mode },
+        { approval_mode: modeVal },
         { new: true },
       );
+
+      if (!conversation) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(
+          formatResponse(false, null, 'Conversation not found.'),
+        );
+      }
+
+      emitEvent('approval_mode_update', {
+        conversationId: id,
+        approval_mode: conversation.approval_mode,
+      });
 
       return res.status(HTTP_STATUS.OK).json(
         formatResponse(true, { approval_mode: conversation.approval_mode }, 'Approval mode updated.'),

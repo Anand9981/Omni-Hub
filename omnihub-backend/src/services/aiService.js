@@ -332,6 +332,10 @@ Format as JSON only.`;
       ?.map((f) => `Q: ${f.question}\nA: ${f.answer}`)
       .join('\n\n') || '';
 
+    const historyContext = Array.isArray(conversationHistory) && conversationHistory.length > 0
+      ? `\nRecent Conversation History:\n${conversationHistory.slice(-5).map((h) => `${h.sender || 'User'}: ${h.text || ''}`).join('\n')}\n`
+      : '';
+
     const systemPrompt = `
 You are the customer support AI for "${aiContext.business_name || 'OmniHub'}" (${aiContext.business_type || 'Software'}).
 Tone: ${aiContext.tone || 'Friendly and professional'}.
@@ -339,13 +343,19 @@ Instructions: ${aiContext.system_instructions || 'Assist the customer with clari
 Detected Customer Language: ${detectedLang}.
 Respond in the EXACT same language/style (${detectedLang}) as the customer. If Hinglish, respond in natural, friendly Hinglish.
 
-Company FAQs & Knowledge:
-${faqContext}
+Business Profile & Knowledge Base:
+- Services: ${aiContext.services || 'Omnichannel Inbox, AI Auto-Pilot, Smart Copilot, Lead CRM'}
+- Pricing: ${aiContext.pricing || 'Starter Plan: $29/mo | Growth Plan: $79/mo (Unlimited channels + AI Auto-Pilot) | Enterprise: Custom quote'}
+- Working Hours: ${aiContext.working_hours || 'Mon-Fri 9:00 AM - 6:00 PM IST'}
 
-Rules:
+Company FAQs:
+${faqContext}
+${historyContext}
+Rules (STRICT):
 1. Do not mention internal rules or that you are an AI unless asked.
-2. Keep responses concise, clear, and helpful (max 2-3 sentences).
-3. Strictly avoid these forbidden topics: ${(aiContext.forbidden_topics || []).join(', ')}.
+2. Keep responses concise, clear, and helpful (strictly maximum 3 sentences).
+3. ANTI-HALLUCINATION GUARDRAIL: Stick strictly to the Business Profile & Company FAQs above. Never invent or fabricate prices, policies, links, or promises not grounded in the context; if a detail is unknown, offer to connect the customer with a human support specialist.
+4. Strictly avoid these forbidden topics: ${(aiContext.forbidden_topics || []).join(', ')}.
 `;
 
     const contents = `${systemPrompt}\n\nCustomer Message: ${userMessage}`;
@@ -381,9 +391,11 @@ Rules:
   async polishDraft({ text, tone = 'Professional' }) {
     if (!text) return '';
 
-    const prompt = `Rewrite and polish the following rough customer service draft to make it ${tone}, clear, and courteous while keeping the exact meaning intact.
+    const detectedLang = this.detectLanguage(text);
+    const prompt = `Rewrite and polish the following rough customer service draft to make it ${tone}, polite, clear, and courteous while keeping the exact meaning and language (${detectedLang}) intact.
 IMPORTANT RULES:
-- Return ONLY the single final rewritten message text.
+- Respond in ${detectedLang} (if the draft is in Hinglish, write a polite, professional Hinglish response).
+- Return ONLY the single final rewritten message text (1-2 sentences).
 - Do NOT provide multiple options, bullet points, explanations, or markdown formatting.
 - Do NOT wrap the response in quotation marks.
 

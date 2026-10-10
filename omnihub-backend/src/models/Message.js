@@ -78,6 +78,7 @@ const messageSchema = new mongoose.Schema(
 );
 
 messageSchema.index({ conversation_id: 1, created_at: -1 });
+messageSchema.index({ text_content: 'text' });
 
 export const Message = mongoose.model('Message', messageSchema);
 export default Message;

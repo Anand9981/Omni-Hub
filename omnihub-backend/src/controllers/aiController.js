@@ -9,7 +9,8 @@ export const aiController = {
    */
   async generateReply(req, res, next) {
     try {
-      const { text, history } = req.body;
+      const text = req.body.text || req.body.message || req.body.userMessage;
+      const { history } = req.body;
       if (!text || !text.trim()) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(
           formatResponse(false, null, 'Customer message text is required.'),
@@ -34,7 +35,8 @@ export const aiController = {
    */
   async generateSuggestions(req, res, next) {
     try {
-      const { text, history, channel } = req.body;
+      const text = req.body.text || req.body.message || req.body.userMessage;
+      const { history, channel } = req.body;
       if (!text || !text.trim()) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(
           formatResponse(false, null, 'Message text is required for suggestions.'),
@@ -110,7 +112,7 @@ export const aiController = {
    */
   async analyzeMessage(req, res, next) {
     try {
-      const { text } = req.body;
+      const text = req.body.text || req.body.message;
       if (!text || !text.trim()) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(
           formatResponse(false, null, 'Text is required for analysis.'),
@@ -131,7 +133,8 @@ export const aiController = {
    */
   async polishDraft(req, res, next) {
     try {
-      const { text, tone } = req.body;
+      const text = req.body.text || req.body.draft || req.body.message;
+      const { tone } = req.body;
       if (!text || !text.trim()) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json(
           formatResponse(false, null, 'Draft text is required to polish.'),
@@ -152,7 +155,7 @@ export const aiController = {
    */
   async detectLanguage(req, res, next) {
     try {
-      const { text } = req.body;
+      const text = req.body.text || req.body.message;
       const language = aiService.detectLanguage(text || '');
       return res.status(HTTP_STATUS.OK).json(
         formatResponse(true, { language }, 'Language detected.'),

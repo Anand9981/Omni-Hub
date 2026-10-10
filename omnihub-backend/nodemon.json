@@ -1,6 +1,5 @@
 {
   "watch": ["src"],
   "ext": "js,json",
-  "ignore": ["tests/*", "node_modules/*"],
-  "exec": "node --experimental-vm-modules src/server.js"
+  "ignore": ["logs/*", "tests/*", "postman/*", "scripts/*"]
 }

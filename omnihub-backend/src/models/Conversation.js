@@ -85,6 +85,7 @@ const conversationSchema = new mongoose.Schema(
 );
 
 conversationSchema.index({ platform: 1, external_chat_id: 1 }, { unique: true });
+conversationSchema.index({ sender_name: 'text', sender_email: 'text', sender_phone: 'text' });
 
 export const Conversation = mongoose.model('Conversation', conversationSchema);
 export default Conversation;

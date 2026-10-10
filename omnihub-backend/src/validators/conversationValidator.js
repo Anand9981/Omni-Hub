@@ -15,7 +15,8 @@ export function validateAutoPilotToggle(body) {
 }
 
 export function validateApprovalMode(body) {
-  if (!['AUTO', 'MANUAL'].includes(body.approval_mode)) {
+  const modeVal = (body.approval_mode || body.mode || '').toUpperCase();
+  if (!['AUTO', 'MANUAL'].includes(modeVal)) {
     return { isValid: false, message: 'Invalid approval mode. Must be AUTO or MANUAL.' };
   }
   return { isValid: true };

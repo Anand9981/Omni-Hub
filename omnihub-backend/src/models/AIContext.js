@@ -24,34 +24,38 @@ const aiContextSchema = new mongoose.Schema(
     },
     services: {
       type: String,
-      default: '',
+      default: 'Omnichannel Inbox (WhatsApp, Telegram, Discord, Instagram, LinkedIn, WebChat), AI Auto-Pilot, Smart Copilot, Lead CRM.',
     },
     working_hours: {
       type: String,
-      default: '',
+      default: 'Monday to Friday, 9:00 AM to 6:00 PM IST (24/7 AI Auto-Pilot active)',
     },
     pricing: {
       type: String,
-      default: '',
+      default: 'Starter Plan: $29/month (3 channels, 2 seats) | Growth Plan: $79/month (Unlimited channels, AI Auto-Pilot, Lead CRM) | Enterprise Plan: Custom quote.',
     },
     asset_links: {
       type: String,
-      default: '',
+      default: 'https://omnihub.example/resources/catalog.pdf',
     },
     system_instructions: {
       type: String,
-      default: 'You are an intelligent support assistant for Northstar Studio. Provide helpful, accurate, and polite assistance in English, Hindi, or Hinglish based on the customer language.',
+      default: 'You are an intelligent support assistant for OmniHub. Provide helpful, accurate, and polite assistance in English, Hindi, or Hinglish based on the customer language.',
     },
     faqs: {
       type: [faqSchema],
       default: [
         {
+          question: 'What are your pricing plans?',
+          answer: 'Our Starter Plan is $29/month (3 channels, 2 seats), Growth Plan is $79/month (unlimited channels + AI Auto-Pilot + Lead CRM), and Enterprise Plan offers custom SLA & pricing.',
+        },
+        {
           question: 'What are your working hours?',
           answer: 'We are open Monday to Friday from 9:00 AM to 6:00 PM IST.',
         },
         {
-          question: 'How long does delivery take?',
-          answer: 'Standard shipping takes 3-5 business days across major cities.',
+          question: 'How long does setup take?',
+          answer: 'Standard channel onboarding takes less than 10 minutes using our Quickstart Setup Guide.',
         },
       ],
     },
