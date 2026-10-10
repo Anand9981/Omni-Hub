@@ -9,6 +9,7 @@ import { approvalService } from '../services/approvalService.js';
 import { conversationService } from '../services/conversationService.js';
 import { loadLeads } from '../store/leadSlice.js';
 import { aiService } from '../services/aiService.js';
+import api from '../api/axios.js';
 import LiveToastContainer from '../components/common/LiveToastContainer.jsx';
 
 function playNotificationChime() {
@@ -120,6 +121,10 @@ export function SocketProvider({ children }) {
         const token = localStorage.getItem('omnihub_access_token');
         const socketOptions = {
           transports: ['websocket', 'polling'],
+          reconnection: true,
+          reconnectionAttempts: Infinity,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 5000,
           ...(token ? { auth: { token } } : {}),
         };
         socket = io(SOCKET_URL, socketOptions);
@@ -128,6 +133,7 @@ export function SocketProvider({ children }) {
           console.log('[Socket.io] Socket connected successfully! ID:', socket.id);
           setConnected(true);
           setMode('live');
+          socket.emit('join_dashboard');
         });
         socket.on('disconnect', (reason) => {
           console.log('[Socket.io] Disconnected from server:', reason);
@@ -137,6 +143,7 @@ export function SocketProvider({ children }) {
         socket.on('new_message', (payload) => {
           dispatch(receiveMessage(payload));
           dispatch(loadConversations());
+          emitLocal('new_message', payload);
 
           const conversationId = payload.conversationId || payload.conversation_id;
           const msg = payload.message || payload;
@@ -158,9 +165,24 @@ export function SocketProvider({ children }) {
           }
         });
         socket.on('message_status', (payload) => dispatch(applyDeliveryReceipt(payload)));
-        socket.on('pending_approval', (payload) => dispatch(receivePending(payload)));
-        socket.on('typing', (payload) => dispatch(setTyping(payload)));
-        socket.on('conversation_update', () => dispatch(loadConversations()));
+        socket.on('pending_approval', (payload) => {
+          dispatch(receivePending(payload));
+          emitLocal('pending_approval', payload);
+        });
+        socket.on('typing', (payload) => {
+          dispatch(setTyping(payload));
+          emitLocal('typing', payload);
+        });
+        socket.on('conversation_update', (payload) => {
+          dispatch(loadConversations());
+          emitLocal('conversation_update', payload);
+        });
+        socket.on('analytics_update', (payload) => {
+          emitLocal('analytics_update', payload);
+        });
+        socket.on('analytics_snapshot', (payload) => {
+          emitLocal('analytics_snapshot', payload);
+        });
         socket.on('ai_suggestions', () => dispatch(loadConversations()));
         socket.on('autopilot_update', () => dispatch(loadConversations()));
         socket.on('approval_resolved', () => {
@@ -194,10 +216,25 @@ export function SocketProvider({ children }) {
    * of being dispatched - exactly the behaviour the acceptance test describes.
    */
   const simulateInbound = useCallback((conversationId, text) => {
-    const conversation = conversationService.listConversations().find((row) => row.id === conversationId);
+    const conversation = conversationService.getCachedConversations().find((row) => row.id === conversationId);
     if (!conversation) throw new Error('That conversation could not be found.');
 
     const body = text || SAMPLE_INBOUND[Math.floor(Math.random() * SAMPLE_INBOUND.length)];
+
+    if (mode === 'live') {
+      api.post('/webhooks/website', {
+        session_id: conversation.external_chat_id || `sim-${conversationId}`,
+        sender_name: conversation.sender_name || 'Customer',
+        sender_email: conversation.sender_email || '',
+        sender_phone: conversation.sender_phone || '',
+        text: body,
+      }).then(() => {
+        dispatch(loadConversations());
+        dispatch(loadApprovals());
+        dispatch(loadLeads());
+      }).catch(() => {});
+    }
+
     const message = conversationService.appendMessage(conversationId, {
       sender_type: SENDER_TYPE.USER,
       direction: DIRECTION.INBOUND,
@@ -219,29 +256,31 @@ export function SocketProvider({ children }) {
       });
     }
 
-    if (conversation.auto_pilot === 'ON' && conversation.approval_mode === 'MANUAL') {
-      const draft = approvalService.create({
-        conversationId,
-        text: aiService.suggestReply(body),
-        source: 'AI draft - held by approval mode',
-      });
-      dispatch(receivePending(draft));
-      emitLocal('pending_approval', draft);
-    } else if (conversation.auto_pilot === 'ON') {
-      const reply = conversationService.appendMessage(conversationId, {
-        sender_type: SENDER_TYPE.BOT,
-        direction: DIRECTION.OUTBOUND,
-        text_content: aiService.suggestReply(body),
-        status: MESSAGE_STATUS.SENT.id,
-      });
-      dispatch(receiveMessage({ conversationId, message: reply }));
-      emitLocal('new_message', { conversationId, message: reply });
+    if (mode !== 'live') {
+      if (conversation.auto_pilot === 'ON' && conversation.approval_mode === 'MANUAL') {
+        const draft = approvalService.create({
+          conversationId,
+          text: aiService.suggestReply(body),
+          source: 'AI draft - held by approval mode',
+        });
+        dispatch(receivePending(draft));
+        emitLocal('pending_approval', draft);
+      } else if (conversation.auto_pilot === 'ON') {
+        const reply = conversationService.appendMessage(conversationId, {
+          sender_type: SENDER_TYPE.BOT,
+          direction: DIRECTION.OUTBOUND,
+          text_content: aiService.suggestReply(body),
+          status: MESSAGE_STATUS.SENT.id,
+        });
+        dispatch(receiveMessage({ conversationId, message: reply }));
+        emitLocal('new_message', { conversationId, message: reply });
+      }
     }
 
     if (activeConversationId === conversationId) conversationService.markRead(conversationId);
     dispatch(loadConversations());
     return message;
-  }, [activeConversationId, addToast, dispatch, emitLocal]);
+  }, [activeConversationId, addToast, dispatch, emitLocal, mode]);
 
   const simulateTyping = useCallback((conversationId, isTyping = true) => {
     dispatch(setTyping({ conversationId, isTyping }));
